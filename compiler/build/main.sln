@@ -3,12 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34316.72
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "main", "main.exe", "{86813A06-C7C3-4E86-A3A1-6874906B374E}"
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "main", "main.exe", "{C6FDA10E-0C25-457A-8EF6-A65CE0A23D29}"
 	ProjectSection(DebuggerProjectSystem) = preProject
 		PortSupplier = 00000000-0000-0000-0000-000000000000
-		Executable = C:\Alejandro\compiler\build\main.exe
+		Executable = C:\Alejandro\Clox-Programming-Language\compiler\build\main.exe
 		RemoteMachine = LAPTOP-DTOCEO97
-		StartingDirectory = C:\Alejandro\compiler\build
+		StartingDirectory = C:\Alejandro\Clox-Programming-Language\compiler\build
 		Environment = Default
 		LaunchingEngine = 00000000-0000-0000-0000-000000000000
 		UseLegacyDebugEngines = No
@@ -22,12 +22,12 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{86813A06-C7C3-4E86-A3A1-6874906B374E}.Release|x86.ActiveCfg = Release|x86
+		{C6FDA10E-0C25-457A-8EF6-A65CE0A23D29}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {8E61CFE6-5B78-4EDB-9D75-5393D8D41F6D}
+		SolutionGuid = {F3363421-DC6F-4232-AD88-4E7990CCE8FC}
 	EndGlobalSection
 EndGlobal

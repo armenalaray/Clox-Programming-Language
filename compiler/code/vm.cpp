@@ -126,3 +126,9 @@ Value pop()
     --vm.stackTop;
     return *vm.stackTop;
 }
+
+InterpretResult interpret(const char* source)
+{
+    compile(source);
+    return INTERPRET_OK;
+}
