@@ -13,7 +13,7 @@ static void repl()
     char line[1024];
     for(;;)
     {
-        if(fgets(line, sizeof(line),stdin ))
+        if(!fgets(line, sizeof(line),stdin ))
         {
             printf("\n");
             break;

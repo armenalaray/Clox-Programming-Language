@@ -4,7 +4,8 @@
 #define clox_compiler_h
 
 #include "scanner.h"
+#include "chunk.h"
 
-void compile(const char* source);
+bool compile(const char* source, Chunk* chunk);
 
 #endif //COMPILER_H

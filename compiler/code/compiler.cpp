@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "compiler.h"
 
-void compile(const char* source)
+bool compile(const char* source, Chunk* chunk)
 {
     initScanner(source);
     
@@ -20,8 +20,9 @@ void compile(const char* source)
             printf("   | ");
         }
         
-        printf("%2d '%.*s'", token.type, token.length, token.start);
+        printf("%2d '%.*s'\n", token.type, token.length, token.start);
         
         if(token.type == TOKEN_EOF) break;
     }
+    return false;
 }
