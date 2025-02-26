@@ -21,6 +21,15 @@ typedef enum
     PREC_PRIMARY
 }Precedence;
 
+typedef void (*ParseFn)();
+
+struct ParseRule
+{
+    ParseFn prefix;
+    ParseFn infix;
+    Precedence precedence;
+};
+
 typedef struct 
 {
     Token current;
@@ -30,6 +39,10 @@ typedef struct
 }Parser;
 
 
+void grouping();
+void unary();
+void binary();
+void number();
 
 bool compile(const char* source, Chunk* chunk);
 

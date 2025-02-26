@@ -139,6 +139,8 @@ InterpretResult interpret(const char* source)
         return INTERPRET_COMPILE_ERROR;
     }
     
+    disassembleChunk(&chunk, "alejandro");
+    
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
     
@@ -146,5 +148,5 @@ InterpretResult interpret(const char* source)
     
     freeChunk(&chunk);
     
-    return result;
+    return INTERPRET_OK;
 }

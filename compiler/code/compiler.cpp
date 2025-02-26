@@ -3,6 +3,50 @@
 #include "stdlib.h"
 #include "compiler.h"
 
+//Where can they be used?
+ParseRule rules[TOKEN_EOF + 1] = { 
+    {grouping, NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE}, 
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {unary,    binary, PREC_TERM},
+    {NULL,     binary, PREC_TERM},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     binary, PREC_FACTOR},
+    {NULL,     binary, PREC_FACTOR},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {number,   NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+    {NULL,     NULL,   PREC_NONE},
+};
+
 Parser parser;
 Chunk * compilingChunk;
 
@@ -20,7 +64,7 @@ static void errorAt(Token* token, const char * message)
     
     if(token->type == TOKEN_EOF)
     {
-        fprintf(stderr, "at end");
+        fprintf(stderr, " at end");
     }
     else if(token->type == TOKEN_ERROR)
     {
@@ -112,15 +156,39 @@ void emitConstant(Value value)
     emitBytes(OP_CONSTANT, makeConstant(value));
 }
 
-static void number()
+void number()
 {
     double value = strtod(parser.previous.start, NULL);
     emitConstant(value);
 }
 
 
+static ParseRule * getRule(TokenType type)
+{
+    return &rules[type];
+}
+
 static void parsePrecedence(Precedence precedence)
 {
+    //prefix parsing
+    advance();
+    ParseFn prefixRule = getRule(parser.previous.type)->prefix;
+    if(prefixRule == NULL)
+    {
+        error("Expect expression.");
+    }
+    prefixRule();
+    
+    //infix parsing
+    /*
+agarras la misma
+*/
+    while(getRule(parser.current.type)->precedence >= precedence)
+    {
+        advance();
+        ParseFn infixRule = getRule(parser.previous.type)->infix;
+        infixRule();
+    }
     
 }
 
@@ -130,10 +198,35 @@ static void expression()
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
-static void unary()
+void binary()
 {
     TokenType type = parser.previous.type;
     
+    ParseRule * rule = getRule(type);
+    
+    //It compiles the right operand!
+    //we need to stop if operand is the same as this one
+    parsePrecedence((Precedence)(rule->precedence + 1));
+    
+    switch(type)
+    {
+        case TOKEN_PLUS: emitByte(OP_ADD); break;
+        
+        case TOKEN_MINUS: emitByte(OP_SUBTRACT); break;
+        
+        case TOKEN_STAR: emitByte(OP_MULTIPLY); break;
+        
+        case TOKEN_SLASH: emitByte(OP_DIVIDE); break;
+        default: return;
+    }
+    
+}
+
+void unary()
+{
+    TokenType type = parser.previous.type;
+    
+    //este es del que sigue
     parsePrecedence(PREC_UNARY);
     
     //Por eso se pone despues por que el stack tiene aqui el valor que se va a negar
@@ -147,7 +240,7 @@ static void unary()
     
 }
 
-static void grouping()
+void grouping()
 {
     //es para el inner code
     expression();
