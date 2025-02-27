@@ -135,6 +135,15 @@ static void emitReturn()
 static void endCompiler()
 {
     emitReturn();
+    
+#ifdef DEBUG_PRINT_CODE
+    
+    if(!parser.hadError)
+    {
+        disassembleChunk(currentChunk(), "code");
+    }
+    
+#endif
 }
 
 uint8_t makeConstant(Value value)
@@ -159,7 +168,7 @@ void emitConstant(Value value)
 void number()
 {
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 

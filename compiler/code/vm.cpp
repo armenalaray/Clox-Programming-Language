@@ -1,5 +1,5 @@
 
-
+#include <stdarg.h>
 #include <stdio.h>
 #include "vm.h"
 #include "debug.h"
@@ -21,18 +21,46 @@ void freeVM()
     
 }
 
+static Value peek(int distance)
+{
+    return vm.stackTop[-1-distance];
+}
+
+//No te va a jalar nada por que no tiene args!
+static void runtimeError(const char * format, ...)
+{
+    va_list args;
+    //esta optiene los argumentos 
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+    
+    size_t offset = (vm.ip - 1) - vm.chunk->code;
+    
+    int lineNumber = vm.chunk->lines[offset];
+    fprintf(stderr, "[line %d] in script\n", lineNumber);
+    
+    resetStack();
+}
+
 static InterpretResult run()
 {
     
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
     
-#define BINARY_OP(op) \
+#define BINARY_OP(valueType, op) \
 do { \
-Value b = pop(); \
-Value a = pop(); \
-push(a op b); \
+if(!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))){\
+runtimeError("Operands must be numbers.");\
+return INTERPRET_RUNTIME_ERROR; \
+}\
+double b = AS_NUMBER(pop()); \
+double a = AS_NUMBER(pop()); \
+push(valueType(a op b)); \
 } while(false)
+    
     
     for(;;)
     {
@@ -68,27 +96,33 @@ push(a op b); \
             }
             case OP_ADD:
             {
-                BINARY_OP(+);
+                BINARY_OP(NUMBER_VAL, +);
                 break;
             }
             case OP_SUBTRACT:
             {
-                BINARY_OP(-);
+                BINARY_OP(NUMBER_VAL,-);
                 break;
             }
             case OP_MULTIPLY:
             {
-                BINARY_OP(*);
+                BINARY_OP(NUMBER_VAL,*);
                 break;
             }
             case OP_DIVIDE:
             {
-                BINARY_OP(/);
+                BINARY_OP(NUMBER_VAL,/);
                 break;
             }
             case OP_NEGATE:
             {
-                push(-pop());
+                if(!IS_NUMBER(peek(0)))
+                {
+                    //osea no lo puedes ver hasta que se corra
+                    runtimeError("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
             }
             case OP_RETURN:
@@ -139,7 +173,7 @@ InterpretResult interpret(const char* source)
         return INTERPRET_COMPILE_ERROR;
     }
     
-    disassembleChunk(&chunk, "alejandro");
+    //disassembleChunk(&chunk, "alejandro");
     
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
