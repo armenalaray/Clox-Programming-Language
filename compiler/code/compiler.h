@@ -43,6 +43,7 @@ typedef struct
 }Parser;
 
 
+void literal();
 void grouping();
 void unary();
 void binary();
