@@ -15,6 +15,9 @@
 #define FREE_ARRAY(type, pointer, oldCount) \
 (type*)reallocate(pointer, sizeof(type) * (oldCount), 0);
 
+#define ALLOCATE(type, length) \
+(type*)reallocate(NULL, 0, sizeof(type) * (length))
+
 void * reallocate(void * pointer, size_t oldSize, size_t newSize);
 
 #endif //MEMORY_H

@@ -42,7 +42,7 @@ typedef struct
     bool panicMode;
 }Parser;
 
-
+void string();
 void literal();
 void grouping();
 void unary();
