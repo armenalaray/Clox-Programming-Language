@@ -48,6 +48,7 @@ void grouping();
 void unary();
 void binary();
 void number();
+void variable();
 
 bool compile(const char* source, Chunk* chunk);
 
