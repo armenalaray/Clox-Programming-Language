@@ -226,6 +226,38 @@ static void expression()
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static bool check(TokenType type)
+{
+    return parser.current.type == type;
+}
+
+static bool match(TokenType type)
+{
+    if(!check(type)) return false;
+    advance();
+    return true;
+}
+
+static void printStatement()
+{
+    //The statements keep the stack equal
+    //and expressions keep it 1.
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+    emitByte(OP_PRINT);
+}
+
+static void statement()
+{
+    if(match(TOKEN_PRINT))
+        printStatement();
+}
+
+static void declaration()
+{
+    statement();
+}
+
 void binary()
 {
     TokenType type = parser.previous.type;
@@ -287,8 +319,12 @@ bool compile(const char* source, Chunk* chunk)
     parser.panicMode = false;
     
     advance();
-    expression();
-    consume(TOKEN_EOF, "Expect end of expression.");
+    
+    while(!match(TOKEN_EOF))
+    {
+        declaration();
+    }
+    
     endCompiler();
     return !parser.hadError;
 }

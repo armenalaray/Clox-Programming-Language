@@ -1,1 +1,1 @@
-"ale" + "jan" + "dro"
+print "ale" == "ale";
