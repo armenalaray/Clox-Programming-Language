@@ -49,13 +49,8 @@ bool valuesEqual(Value a, Value b)
         case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
         case VAL_NIL: return true;
         case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-        case VAL_OBJ: 
-        {
-            ObjString* a_ = AS_STRING(a);
-            ObjString* b_ = AS_STRING(b);
-            
-            return a_->length == b_->length && memcmp(a_->chars, b_->chars, a_->length) == 0;
-        }
+        //estoy comparajdo los punteros 
+        case VAL_OBJ: return AS_OBJ(a) == AS_OBJ(b);
         default: return false;
     }
 }

@@ -19,10 +19,12 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.strings);
 }
 
 void freeVM()
 {
+    freeTable(&vm.strings);
     freeObjects();
 }
 
@@ -60,6 +62,7 @@ static void concatenate()
     ObjString* a = AS_STRING(pop());
     
     int length = a->length + b->length;
+    //it is because here we have allocate we need to free it!
     char * chars = ALLOCATE(char, length + 1);
     
     memcpy(chars, a->chars, a->length);

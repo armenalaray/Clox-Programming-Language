@@ -4,6 +4,7 @@
 #define clox_vm_h
 
 #include "common.h"
+#include "table.h"
 #include "chunk.h"
 #include "compiler.h"
 
@@ -19,8 +20,13 @@ typedef struct
 {
     uint8_t * ip;
     Chunk * chunk;
+    
     Value stack[STACK_MAX];
     Value * stackTop;
+    
+    Table strings;
+    
+    //linked list
     Obj* objects;
 }VM;
 
