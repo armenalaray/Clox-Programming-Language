@@ -34,6 +34,19 @@ struct ParseRule
     Precedence precedence;
 };
 
+typedef struct
+{
+    Token name;
+    int depth;
+}Local;
+
+typedef struct
+{
+    Local locals[UINT8_COUNT];
+    int localCount;
+    int scopeDepth;
+}Compiler;
+
 typedef struct 
 {
     Token current;
@@ -49,6 +62,7 @@ void unary(bool canAssign);
 void binary(bool canAssign);
 void number(bool canAssign);
 void variable(bool canAssign);
+void declaration();
 
 bool compile(const char* source, Chunk* chunk);
 

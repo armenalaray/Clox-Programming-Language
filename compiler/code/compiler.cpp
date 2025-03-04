@@ -1,4 +1,5 @@
 
+#include "string.h"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -51,11 +52,21 @@ ParseRule rules[] = {
 };
 
 Parser parser;
+
+Compiler* current = NULL;
+
 Chunk * compilingChunk;
 
 Chunk * currentChunk()
 {
     return compilingChunk;
+}
+
+static void initCompiler(Compiler * compiler)
+{
+    compiler->localCount = 0;
+    compiler->scopeDepth = 0;
+    current = compiler;
 }
 
 static void errorAt(Token* token, const char * message)
@@ -265,11 +276,142 @@ static void expressionStatement()
     emitByte(OP_POP);
 }
 
+
+static uint8_t identifierConstant(Token* name)
+{
+    //tengo un value
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+//shadowing?
+void addLocal(Token name)
+{
+    //aqui ya se salió
+    if(current->localCount == UINT8_COUNT)
+    {
+        error("Too many local varialbes in function");
+        return;
+    }
+    
+    Local * local = &current->locals[current->localCount++];
+    
+    local->name = name;
+    local->depth = current->scopeDepth;
+    
+}
+
+bool identifiersEqual(Token * a, Token * b)
+{
+    if(a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static void declareVariable()
+{
+    //esto es para locales!
+    if(current->scopeDepth == 0) return;
+    Token* name = &parser.previous;
+    
+    for(int i = current->localCount - 1; i >= 0; i--)
+    {
+        Local* local = &current->locals[i]; 
+        
+        if(local->depth != -1 && local->depth < current->scopeDepth)
+        {
+            break;
+        }
+        
+        //esto nomas checa el current scope!
+        //esto si permite el shadowing!
+        if(identifiersEqual(name, &local->name))
+        {
+            error("Already a variable with this name in this scope.");
+        }
+    }
+    
+    addLocal(*name);
+}
+
+static uint8_t parseVariable(const char* errorMessage)
+{
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    
+    //no se mete si es local
+    declareVariable();
+    if(current->scopeDepth > 0) return 0;
+    
+    return identifierConstant(&parser.previous);
+    
+    
+}
+
+
+static void defineVariable(uint8_t index)
+{
+    //aqui puede llegar con 0
+    if(current->scopeDepth > 0) return;
+    
+    emitBytes(OP_DEFINE_GLOBAL, index);
+}
+
+//tal vez porque no se puede hacer mucho en un var declaration
+static void varDeclaration()
+{
+    uint8_t index = parseVariable("Expect variable name.");
+    
+    if(match(TOKEN_EQUAL))
+    {
+        expression();
+    }
+    else
+    {
+        emitByte(OP_NIL);
+    }
+    
+    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    
+    defineVariable(index);
+}
+
+
+static void block()
+{
+    while(!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF))
+    {
+        declaration();
+    }
+    
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after block"); 
+}
+
+static void beginScope()
+{
+    ++current->scopeDepth;
+}
+
+static void endScope()
+{
+    --current->scopeDepth;
+    
+    while(current->localCount > 0 && current->locals[current->localCount - 1].depth > current->scopeDepth)
+    {
+        //estas eliminando variables
+        emitByte(OP_POP);
+        --current->localCount;
+    }
+}
+
 static void statement()
 {
     if(match(TOKEN_PRINT))
     {
         printStatement();
+    }
+    else if(match(TOKEN_LEFT_BRACE))
+    {
+        beginScope();
+        block();
+        endScope();
     }
     else
     {
@@ -277,6 +419,7 @@ static void statement()
         expressionStatement();
     }
 }
+
 
 static void synchronize()
 {
@@ -305,43 +448,9 @@ static void synchronize()
     }
 }
 
-static uint8_t identifierConstant(Token* name)
-{
-    //tengo un value
-    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
-}
 
 
-static uint8_t parseVariable(const char* errorMessage)
-{
-    consume(TOKEN_IDENTIFIER, errorMessage);
-    return identifierConstant(&parser.previous);
-}
-
-static void defineVariable(uint8_t index)
-{
-    emitBytes(OP_DEFINE_GLOBAL, index);
-}
-
-static void varDeclaration()
-{
-    uint8_t index = parseVariable("Expect variable name.");
-    
-    if(match(TOKEN_EQUAL))
-    {
-        expression();
-    }
-    else
-    {
-        emitByte(OP_NIL);
-    }
-    
-    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
-    
-    defineVariable(index);
-}
-
-static void declaration()
+void declaration()
 {
     if(match(TOKEN_VAR))
     {
@@ -354,6 +463,7 @@ static void declaration()
     
     if(parser.panicMode) synchronize();
 }
+
 
 static void namedVariable(Token name, bool canAssign)
 {
@@ -429,6 +539,9 @@ void grouping(bool canAssign)
 bool compile(const char* source, Chunk* chunk)
 {
     initScanner(source);
+    
+    Compiler compiler;
+    initCompiler(&compiler);
     
     compilingChunk = chunk;
     
