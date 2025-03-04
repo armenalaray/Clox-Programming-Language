@@ -150,6 +150,20 @@ push(valueType(a op b)); \
                 break;
             }
             
+            case OP_SET_GLOBAL:
+            {
+                ObjString* name = READ_STRING();
+                //NOTE: since it is new we need to delete it because we expect to be defined before
+                if(tableSet(&vm.globals, name, peek(0)))
+                {
+                    tableDelete(&vm.globals, name);
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                //aqui no se hace el pop!
+                break;
+            }
+            
             case OP_DEFINE_GLOBAL:
             {
                 ObjString* name = READ_STRING();

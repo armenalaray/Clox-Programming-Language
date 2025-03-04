@@ -124,7 +124,7 @@ static void emitByte(uint8_t byte)
     writeChunk(currentChunk(), byte, parser.previous.line);
 }
 
-void literal()
+void literal(bool canAssign)
 {
     switch(parser.previous.type)
     {
@@ -179,12 +179,12 @@ void emitConstant(Value value)
     emitBytes(OP_CONSTANT, makeConstant(value));
 }
 
-void string()
+void string(bool canAssign)
 {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
-void number()
+void number(bool canAssign)
 {
     double value = strtod(parser.previous.start, NULL);
     emitConstant(NUMBER_VAL(value));
@@ -196,35 +196,6 @@ static ParseRule * getRule(TokenType type)
     return &rules[type];
 }
 
-static void parsePrecedence(Precedence precedence)
-{
-    //prefix parsing
-    advance();
-    ParseFn prefixRule = getRule(parser.previous.type)->prefix;
-    if(prefixRule == NULL)
-    {
-        error("Expect expression.");
-    }
-    prefixRule();
-    
-    //infix parsing
-    /*
-agarras la misma
-*/
-    while(getRule(parser.current.type)->precedence >= precedence)
-    {
-        advance();
-        ParseFn infixRule = getRule(parser.previous.type)->infix;
-        infixRule();
-    }
-    
-}
-
-static void expression()
-{
-    //Literal le estoy diciende que parsee todas!
-    parsePrecedence(PREC_ASSIGNMENT);
-}
 
 static bool check(TokenType type)
 {
@@ -236,6 +207,46 @@ static bool match(TokenType type)
     if(!check(type)) return false;
     advance();
     return true;
+}
+
+
+static void parsePrecedence(Precedence precedence)
+{
+    //prefix parsing
+    advance();
+    ParseFn prefixRule = getRule(parser.previous.type)->prefix;
+    if(prefixRule == NULL)
+    {
+        error("Expect expression.");
+    }
+    
+    bool canAssign = precedence <= PREC_ASSIGNMENT;
+    
+    prefixRule(canAssign);
+    
+    //infix parsing
+    /*
+agarras la misma
+se supone que aqui ya deberia de haber consumido el assignment!
+*/
+    while(getRule(parser.current.type)->precedence >= precedence)
+    {
+        advance();
+        ParseFn infixRule = getRule(parser.previous.type)->infix;
+        infixRule(canAssign);
+    }
+    
+    if(canAssign && match(TOKEN_EQUAL))
+    {
+        error("Invalid assignment target.");
+    }
+    
+}
+
+static void expression()
+{
+    //Literal le estoy diciende que parsee todas!
+    parsePrecedence(PREC_ASSIGNMENT);
 }
 
 static void printStatement()
@@ -262,6 +273,7 @@ static void statement()
     }
     else
     {
+        //aqui se llama al setter
         expressionStatement();
     }
 }
@@ -343,18 +355,27 @@ static void declaration()
     if(parser.panicMode) synchronize();
 }
 
-static void namedVariable(Token name)
+static void namedVariable(Token name, bool canAssign)
 {
     uint8_t index = identifierConstant(&name);
-    emitBytes(OP_GET_GLOBAL, index);
+    
+    if(canAssign && match(TOKEN_EQUAL))
+    {
+        expression();
+        emitBytes(OP_SET_GLOBAL, index);
+    }
+    else
+    {
+        emitBytes(OP_GET_GLOBAL, index);
+    }
 }
 
-void variable()
+void variable(bool canAssign)
 {
-    namedVariable(parser.previous);
+    namedVariable(parser.previous, canAssign);
 }
 
-void binary()
+void binary(bool canAssign)
 {
     TokenType type = parser.previous.type;
     
@@ -381,7 +402,7 @@ void binary()
     
 }
 
-void unary()
+void unary(bool canAssign)
 {
     TokenType type = parser.previous.type;
     
@@ -398,7 +419,7 @@ void unary()
     
 }
 
-void grouping()
+void grouping(bool canAssign)
 {
     //es para el inner code
     expression();

@@ -25,7 +25,7 @@ typedef enum
     PREC_PRIMARY
 }Precedence;
 
-typedef void (*ParseFn)();
+typedef void (*ParseFn)(bool canAssign);
 
 struct ParseRule
 {
@@ -42,13 +42,13 @@ typedef struct
     bool panicMode;
 }Parser;
 
-void string();
-void literal();
-void grouping();
-void unary();
-void binary();
-void number();
-void variable();
+void string(bool canAssign);
+void literal(bool canAssign);
+void grouping(bool canAssign);
+void unary(bool canAssign);
+void binary(bool canAssign);
+void number(bool canAssign);
+void variable(bool canAssign);
 
 bool compile(const char* source, Chunk* chunk);
 

@@ -1,4 +1,1 @@
-var al = 30;
-var be = 10 * 100 + al;
-var ci = be / 50;
-print ci;
+a * b = c + d;
