@@ -133,7 +133,7 @@ static Token number()
 
 static bool isAlpha(char c)
 {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '_');
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
 }
 
 static TokenType checkKeyword(int start, int length, const char* rest, TokenType type)

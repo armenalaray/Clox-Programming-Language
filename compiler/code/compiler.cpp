@@ -289,14 +289,14 @@ void addLocal(Token name)
     //aqui ya se salió
     if(current->localCount == UINT8_COUNT)
     {
-        error("Too many local varialbes in function");
+        error("Too many local variables in function");
         return;
     }
     
     Local * local = &current->locals[current->localCount++];
     
     local->name = name;
-    local->depth = current->scopeDepth;
+    local->depth = -1;
     
 }
 
@@ -345,11 +345,19 @@ static uint8_t parseVariable(const char* errorMessage)
     
 }
 
+static void markInitialized()
+{
+    current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
 
 static void defineVariable(uint8_t index)
 {
     //aqui puede llegar con 0
-    if(current->scopeDepth > 0) return;
+    if(current->scopeDepth > 0)
+    {
+        markInitialized();
+        return;
+    }
     
     emitBytes(OP_DEFINE_GLOBAL, index);
 }
@@ -464,19 +472,55 @@ void declaration()
     if(parser.panicMode) synchronize();
 }
 
+//shadowing
+int resolveLocal(Compiler* compiler, Token* name)
+{
+    for(int i = compiler->localCount - 1; i >= 0; i--)
+    {
+        Local* local = &compiler->locals[i]; 
+        
+        if(identifiersEqual(name, &local->name))
+        {
+            if(local->depth == -1)
+            {
+                error("Can't read local variable in its own initializer.");
+            }
+            
+            return i;
+        }
+    }
+    
+    return -1;
+}
 
 static void namedVariable(Token name, bool canAssign)
 {
-    uint8_t index = identifierConstant(&name);
+    uint8_t getOp, setOp;
+    //como no se encuentra aqui
+    int arg = resolveLocal(current, &name);
+    
+    if(arg != -1)
+    {
+        getOp = OP_GET_LOCAL;
+        setOp = OP_SET_LOCAL;
+    }
+    else
+    {
+        //this is for globals only!
+        arg = identifierConstant(&name);
+        getOp = OP_GET_GLOBAL;
+        setOp = OP_SET_GLOBAL;
+    }
     
     if(canAssign && match(TOKEN_EQUAL))
     {
         expression();
-        emitBytes(OP_SET_GLOBAL, index);
+        //este es un safe cast!
+        emitBytes(setOp, (uint8_t)arg);
     }
     else
     {
-        emitBytes(OP_GET_GLOBAL, index);
+        emitBytes(getOp, (uint8_t)arg);
     }
 }
 
