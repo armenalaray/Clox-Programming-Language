@@ -3,12 +3,20 @@
 var a = false;
 var b = true;
 
-if(a and b)
+if (a and b)
 {
-	print "inner";
+	print "Alejandro";
+}
+else if(a == b)
+{
+	print "Juana"; // expect: outer
+}
+else if(a or b)
+{
+	print "Yahir"; // expect: outer
 }
 else
 {
-	print "outer"; // expect: outer
+	print "Pedro"; // expect: outer
 }
 

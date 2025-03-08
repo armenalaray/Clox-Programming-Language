@@ -57,6 +57,7 @@ typedef struct
 
 void string(bool canAssign);
 void and_(bool canAssign);
+void or_(bool canAssign);
 void literal(bool canAssign);
 void grouping(bool canAssign);
 void unary(bool canAssign);
