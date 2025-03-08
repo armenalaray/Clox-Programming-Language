@@ -1,22 +1,9 @@
 
 
-var a = false;
-var b = true;
+var count = 0;
 
-if (a and b)
+while(count > 1)
 {
-	print "Alejandro";
-}
-else if(a == b)
-{
-	print "Juana"; // expect: outer
-}
-else if(a or b)
-{
-	print "Yahir"; // expect: outer
-}
-else
-{
-	print "Pedro"; // expect: outer
+	count = count + 1;
 }
 

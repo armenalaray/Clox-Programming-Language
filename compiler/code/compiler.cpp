@@ -488,6 +488,40 @@ static void ifStatement()
     
 }
 
+static void emitLoop(int loopStart)
+{
+    //el ip va a estar despues de offset
+    emitByte(OP_LOOP);
+    
+    int offset = (currentChunk()->count - loopStart) + 2;
+    if(offset > UINT16_MAX) error("Loop body too large.");
+    
+    emitByte((offset >> 8) & 0xFF);
+    emitByte(offset & 0xFF);
+    
+    
+}
+
+static void whileStatement()
+{
+    int loopStart = currentChunk()->count;
+    
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after if.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+    
+    emitByte(OP_POP);
+    
+    statement();
+    
+    emitLoop(loopStart);
+    
+    patchJump(exitJump);
+    emitByte(OP_POP);
+}
+
 void statement()
 {
     if(match(TOKEN_PRINT))
@@ -497,6 +531,10 @@ void statement()
     else if(match(TOKEN_IF))
     {
         ifStatement();
+    }
+    else if(match(TOKEN_WHILE))
+    {
+        whileStatement();
     }
     else if(match(TOKEN_LEFT_BRACE))
     {
