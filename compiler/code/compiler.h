@@ -63,6 +63,7 @@ void binary(bool canAssign);
 void number(bool canAssign);
 void variable(bool canAssign);
 void declaration();
+void statement();
 
 bool compile(const char* source, Chunk* chunk);
 
