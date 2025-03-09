@@ -25,6 +25,14 @@ void freeObject(Obj* obj)
 {
     switch(obj->type)
     {
+        case OBJ_FUNCTION:
+        {
+            ObjFunction* funcion = (ObjFunction*)obj;
+            freeChunk(&funcion->chunk);
+            FREE(ObjFunction, obj);
+            
+            break;
+        }
         case OBJ_STRING:
         {
             ObjString* a = (ObjString*)obj;

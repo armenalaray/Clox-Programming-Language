@@ -55,15 +55,15 @@ Parser parser;
 
 Compiler* current = NULL;
 
-Chunk * compilingChunk;
-
-Chunk * currentChunk()
+static Chunk* currentChunk()
 {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
-static void initCompiler(Compiler * compiler)
+static void initCompiler(Compiler * compiler, FunctionType type)
 {
+    compiler->function = newFunction();
+    compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     current = compiler;
@@ -785,9 +785,9 @@ bool compile(const char* source, Chunk* chunk)
     initScanner(source);
     
     Compiler compiler;
-    initCompiler(&compiler);
+    initCompiler(&compiler, TYPE_SCRIPT);
     
-    compilingChunk = chunk;
+    //compilingChunk = chunk;
     
     parser.hadError = false;
     parser.panicMode = false;
