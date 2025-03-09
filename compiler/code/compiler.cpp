@@ -464,7 +464,7 @@ void or_(bool canAssign)
 
 static void ifStatement()
 {
-    consume(TOKEN_LEFT_PAREN, "Expect '(' after if.");
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
     
@@ -506,7 +506,7 @@ static void whileStatement()
 {
     int loopStart = currentChunk()->count;
     
-    consume(TOKEN_LEFT_PAREN, "Expect '(' after if.");
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
     
@@ -522,6 +522,81 @@ static void whileStatement()
     emitByte(OP_POP);
 }
 
+void forStatement()
+{
+    // esta variable tiene que estar inicializada y creada en el scope
+    beginScope();
+    
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    
+    if(match(TOKEN_SEMICOLON))
+    {
+        // no initializer!
+    }
+    else if(match(TOKEN_VAR))
+    {
+        // var declaration
+        varDeclaration();
+    }
+    else
+    {
+        expressionStatement();
+    }
+    
+    //este sirve para subir hasta aqui antes de la condicion!
+    //hasta qui se regresa
+    int loopStart = currentChunk()->count;
+    
+    //puede que no haya jump!
+    int exitJump = -1;
+    
+    //este es el segundo
+    if(!match(TOKEN_SEMICOLON))
+    {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';'.");
+        
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);
+    }
+    
+    if(!match(TOKEN_RIGHT_PAREN))
+    {
+        int bodyJump = emitJump(OP_JUMP);
+        
+        int incrementStart = currentChunk()->count;
+        
+        expression();
+        
+        emitByte(OP_POP);
+        
+        //aqui no consumes ;
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+        
+        emitLoop(loopStart);
+        
+        loopStart = incrementStart;
+        
+        patchJump(bodyJump);
+    }
+    
+    
+    //aqui es donde tiene que estar el break!
+    statement();
+    
+    emitLoop(loopStart);
+    
+    if(exitJump != -1)
+    {
+        patchJump(exitJump);
+        emitByte(OP_POP);
+    }
+    
+    endScope();
+    
+    //aqui es donde tienes que saltar con el break!
+}
+
 void statement()
 {
     if(match(TOKEN_PRINT))
@@ -535,6 +610,10 @@ void statement()
     else if(match(TOKEN_WHILE))
     {
         whileStatement();
+    }
+    else if(match(TOKEN_FOR))
+    {
+        forStatement();
     }
     else if(match(TOKEN_LEFT_BRACE))
     {

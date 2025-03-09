@@ -1,9 +1,20 @@
 
+// Lox program to Find the Factorial Using for Loop
 
-var count = 0;
 
-while(count > 1)
+var N = 120;
+
 {
-	count = count + 1;
+    var fact = 1;
+	var i;
+
+    // Loop from 1 to N to get the factorial
+    for (i = 1; i <= N; i = i + 1) 
+	{
+        fact = fact * i;
+    }
+
+    print fact;
 }
+
 
