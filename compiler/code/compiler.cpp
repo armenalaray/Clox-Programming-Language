@@ -66,7 +66,14 @@ static void initCompiler(Compiler * compiler, FunctionType type)
     compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    
     current = compiler;
+    
+    //aqui estan todas
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 static void errorAt(Token* token, const char * message)
@@ -157,18 +164,22 @@ static void emitReturn()
     emitByte(OP_RETURN);
 }
 
-static void endCompiler()
+static ObjFunction* endCompiler()
 {
     emitReturn();
+    
+    ObjFunction* function = current->function;
     
 #ifdef DEBUG_PRINT_CODE
     
     if(!parser.hadError)
     {
-        disassembleChunk(currentChunk(), "code");
+        disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "script");
     }
     
 #endif
+    
+    return function;
 }
 
 uint8_t makeConstant(Value value)
