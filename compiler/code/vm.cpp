@@ -13,6 +13,7 @@ VM vm;
 static void resetStack()
 {
     vm.stackTop = vm.stack;
+    vm.frameCount = 0;
 };
 
 void initVM()
@@ -40,24 +41,6 @@ bool isFalsey(Value value)
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-//No te va a jalar nada por que no tiene args!
-static void runtimeError(const char * format, ...)
-{
-    va_list args;
-    //esta optiene los argumentos 
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fputs("\n", stderr);
-    
-    size_t offset = (vm.ip - 1) - vm.chunk->code;
-    
-    int lineNumber = vm.chunk->lines[offset];
-    fprintf(stderr, "[line %d] in script\n", lineNumber);
-    
-    resetStack();
-}
-
 static void concatenate()
 {
     ObjString* b = AS_STRING(pop());
@@ -77,13 +60,36 @@ static void concatenate()
     push(OBJ_VAL(result));
 }
 
+
+//No te va a jalar nada por que no tiene args!
+static void runtimeError(const char * format, ...)
+{
+    va_list args;
+    //esta optiene los argumentos 
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+    
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
+    size_t instruction = frame->ip - frame->function->chunk.code - 1;
+    int lineNumber = frame->function->chunk.lines[instruction];
+    
+    fprintf(stderr, "[line %d] in script\n", lineNumber);
+    
+    resetStack();
+}
+
+
 static InterpretResult run()
 {
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
     
-#define READ_BYTE() (*vm.ip++)
+#define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() \
-(vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+(frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+    
 #define READ_STRING() AS_STRING(READ_CONSTANT())
     
 #define BINARY_OP(valueType, op) \
@@ -114,7 +120,7 @@ push(valueType(a op b)); \
         }
         printf("\n");
         
-        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+        disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
 #endif
         
         uint8_t instruction;
@@ -141,14 +147,14 @@ push(valueType(a op b)); \
             case OP_GET_LOCAL:
             {
                 uint8_t slot = READ_BYTE();
-                push(vm.stack[slot]);
+                push(frame->slots[slot]);
                 break;
             }
             
             case OP_SET_LOCAL:
             {
                 uint8_t slot = READ_BYTE();
-                vm.stack[slot] = peek(0);
+                frame->slots[slot] = peek(0);
                 break;
             }
             
@@ -269,7 +275,7 @@ push(valueType(a op b)); \
             {
                 uint16_t offset = READ_SHORT();
                 
-                if(isFalsey(peek(0))) vm.ip += offset;
+                if(isFalsey(peek(0))) frame->ip += offset;
                 
                 
                 break;
@@ -278,7 +284,7 @@ push(valueType(a op b)); \
             case OP_JUMP:
             {
                 uint16_t offset = READ_SHORT();
-                vm.ip += offset;
+                frame->ip += offset;
                 
                 break;
             }
@@ -286,7 +292,7 @@ push(valueType(a op b)); \
             case OP_LOOP:
             {
                 uint16_t offset = READ_SHORT();
-                vm.ip -= offset;
+                frame->ip -= offset;
                 
                 break;
             };
@@ -303,13 +309,6 @@ push(valueType(a op b)); \
 #undef READ_STRING
 }
 
-InterpretResult interpret(Chunk* chunk)
-{
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run();
-}
-
 void push(Value value)
 {
     *vm.stackTop = value;
@@ -324,24 +323,20 @@ Value pop()
 
 InterpretResult interpret(const char* source)
 {
-    Chunk chunk;
+    ObjFunction* function = compile(source);
     
-    initChunk(&chunk);
+    if(function == NULL) return INTERPRET_COMPILE_ERROR;
     
-    if(!compile(source, &chunk))
-    {
-        freeChunk(&chunk);
-        return INTERPRET_COMPILE_ERROR;
-    }
+    //aqui se mete al stack!
+    push(OBJ_VAL(function));
     
-    //disassembleChunk(&chunk, "alejandro");
+    CallFrame* frame = &vm.frames[vm.frameCount++];
     
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->code;
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stack;
     
-    InterpretResult result = run();
-    
-    freeChunk(&chunk);
-    
-    return INTERPRET_OK;
+    return run();
 }
+
+

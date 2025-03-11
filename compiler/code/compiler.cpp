@@ -62,6 +62,8 @@ static Chunk* currentChunk()
 
 static void initCompiler(Compiler * compiler, FunctionType type)
 {
+    //esta cosa apunta arriba a su papa
+    compiler->enclosing = current;
     compiler->function = newFunction();
     compiler->type = type;
     compiler->localCount = 0;
@@ -179,6 +181,7 @@ static ObjFunction* endCompiler()
     
 #endif
     
+    current = current->enclosing;
     return function;
 }
 
@@ -323,6 +326,7 @@ static void declareVariable()
 {
     //esto es para locales!
     if(current->scopeDepth == 0) return;
+    
     Token* name = &parser.previous;
     
     for(int i = current->localCount - 1; i >= 0; i--)
@@ -354,12 +358,12 @@ static uint8_t parseVariable(const char* errorMessage)
     if(current->scopeDepth > 0) return 0;
     
     return identifierConstant(&parser.previous);
-    
-    
 }
 
 static void markInitialized()
 {
+    if(current->scopeDepth == 0) return;
+    
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -667,11 +671,44 @@ static void synchronize()
     }
 }
 
+static void function(FunctionType type)
+{
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    
+    beginScope();
+    
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    
+    block();
+    
+    //esto emite return y ya!
+    ObjFunction* function = endCompiler();
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
 
+static void funDeclaration()
+{
+    uint8_t index = parseVariable("Expect function name.");
+    
+    //con funciones si se puede!
+    //aqui estas en global!
+    markInitialized();
+    function(TYPE_FUNCTION);
+    //store that function back into the variable we declared
+    
+    defineVariable(index);
+}
 
 void declaration()
 {
-    if(match(TOKEN_VAR))
+    if(match(TOKEN_FUN))
+    {
+        funDeclaration();
+    }
+    else if(match(TOKEN_VAR))
     {
         varDeclaration();
     }
@@ -791,7 +828,7 @@ void grouping(bool canAssign)
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-bool compile(const char* source, Chunk* chunk)
+ObjFunction* compile(const char* source)
 {
     initScanner(source);
     
@@ -810,6 +847,6 @@ bool compile(const char* source, Chunk* chunk)
         declaration();
     }
     
-    endCompiler();
-    return !parser.hadError;
+    ObjFunction* function = endCompiler();
+    return parser.hadError ? NULL : function;
 }

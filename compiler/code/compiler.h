@@ -46,8 +46,9 @@ typedef enum
     TYPE_SCRIPT
 }FunctionType;
 
-typedef struct
+typedef struct Compiler
 {
+    struct Compiler* enclosing;
     ObjFunction* function;
     FunctionType type;
     
@@ -76,6 +77,6 @@ void variable(bool canAssign);
 void declaration();
 void statement();
 
-bool compile(const char* source, Chunk* chunk);
+ObjFunction* compile(const char* source);
 
 #endif //COMPILER_H
