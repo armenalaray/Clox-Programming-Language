@@ -14,6 +14,7 @@ typedef enum
     OP_FALSE,
     OP_POP,
     OP_LOOP,
+    OP_CALL,
     OP_JUMP_IF_FALSE,
     OP_JUMP, //este es incondicional!
     OP_GET_LOCAL,

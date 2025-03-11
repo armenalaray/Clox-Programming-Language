@@ -9,7 +9,7 @@
 //Where can they be used?
 
 ParseRule rules[] = {
-    /*[TOKEN_LEFT_PAREN]    = */{grouping, NULL,   PREC_NONE},
+    /*[TOKEN_LEFT_PAREN]    = */{grouping, call,   PREC_CALL},
     /*[TOKEN_RIGHT_PAREN]   = */{NULL,     NULL,   PREC_NONE},
     /*[TOKEN_LEFT_BRACE]    = */{NULL,     NULL,   PREC_NONE}, 
     /*[TOKEN_RIGHT_BRACE]   = */{NULL,     NULL,   PREC_NONE},
@@ -70,6 +70,8 @@ static void initCompiler(Compiler * compiler, FunctionType type)
     compiler->scopeDepth = 0;
     
     current = compiler;
+    
+    current->function->name = copyString(parser.previous.start, parser.previous.length);
     
     //aqui estan todas
     Local* local = &current->locals[current->localCount++];
@@ -398,6 +400,38 @@ static void varDeclaration()
     defineVariable(index);
 }
 
+static uint8_t argumentList()
+{
+    uint8_t argCount = 0;
+    
+    if(!check(TOKEN_RIGHT_PAREN))
+    {
+        do
+        {
+            
+            //esto es codigo de argumentos
+            expression();
+            
+            if(argCount == 255)
+            {
+                error("Can't have more than 255 parameters.");
+            }
+            
+            ++argCount;
+        }while(match(TOKEN_COMMA));
+    }
+    
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    
+    return argCount;
+}
+
+//este es para call
+void call(bool canAssign)
+{
+    uint8_t argCount = argumentList();
+    emitBytes(OP_CALL, argCount);
+}
 
 static void block()
 {
@@ -671,6 +705,7 @@ static void synchronize()
     }
 }
 
+//decalaration
 static void function(FunctionType type)
 {
     Compiler compiler;
@@ -679,7 +714,27 @@ static void function(FunctionType type)
     beginScope();
     
     consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    
+    if(!check(TOKEN_RIGHT_PAREN))
+    {
+        do
+        {
+            //it is because functions name is stored in the data segment as well
+            ++current->function->arity;
+            
+            if(current->function->arity > 255)
+            {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            
+            //esto es codigo de parametros
+            uint8_t index = parseVariable("Expect parameter name.");
+            defineVariable(index);
+        }while(match(TOKEN_COMMA));
+    }
+    
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    
     consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
     
     block();

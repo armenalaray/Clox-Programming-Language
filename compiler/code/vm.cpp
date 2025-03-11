@@ -7,6 +7,7 @@
 #include "object.h"
 #include "vm.h"
 #include "debug.h"
+#include "compiler.h"
 
 VM vm;
 
@@ -71,6 +72,9 @@ static void runtimeError(const char * format, ...)
     va_end(args);
     fputs("\n", stderr);
     
+    
+    
+    
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
     size_t instruction = frame->ip - frame->function->chunk.code - 1;
     int lineNumber = frame->function->chunk.lines[instruction];
@@ -80,6 +84,46 @@ static void runtimeError(const char * format, ...)
     resetStack();
 }
 
+bool call(ObjFunction* function, int argCount)
+{
+    //aqui ya esta creada la funcion!
+    
+    if(argCount != function->arity)
+    {
+        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+        return false;
+    }
+    
+    if(vm.frameCount == FRAMES_MAX)
+    {
+        runtimeError("Stack Overflow.");
+        return false;
+    }
+    
+    //aqui esta pero no importa!
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stackTop - argCount - 1;
+    return true;
+}
+
+static bool callValue(Value callee, int argCount)
+{
+    if(IS_OBJ(callee))
+    {
+        switch(OBJ_TYPE(callee))
+        {
+            case OBJ_FUNCTION:
+            return call(AS_FUNCTION(callee), argCount);
+            default:
+            break;
+        }
+    }
+    
+    runtimeError("Can only call functions and classes.");
+    return false;
+}
 
 static InterpretResult run()
 {
@@ -297,6 +341,18 @@ push(valueType(a op b)); \
                 break;
             };
             
+            case OP_CALL:
+            {
+                int argCount = READ_BYTE();
+                //este es el objeto al q vas a llamar
+                if(!callValue(peek(argCount), argCount))
+                {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            
             case OP_RETURN: return INTERPRET_OK;
         }
         
@@ -323,18 +379,18 @@ Value pop()
 
 InterpretResult interpret(const char* source)
 {
+    //aqui se compile pero no hay nada en el stack!
     ObjFunction* function = compile(source);
     
     if(function == NULL) return INTERPRET_COMPILE_ERROR;
     
-    //aqui se mete al stack!
+    //no sigue la orden del compilador aqui se mete al stack!
     push(OBJ_VAL(function));
     
-    CallFrame* frame = &vm.frames[vm.frameCount++];
+    //es perfecta!
+    call(function, 0);
     
-    frame->function = function;
-    frame->ip = function->chunk.code;
-    frame->slots = vm.stack;
+    //este el script!
     
     return run();
 }
