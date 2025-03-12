@@ -187,9 +187,9 @@ push(valueType(a op b)); \
                 //Solo imprimes la constante
                 //aqui no esta en el stack
                 Value constant = READ_CONSTANT();
-                printValue(constant);
+                //printValue(constant);
                 push(constant);
-                printf("\n");
+                //printf("\n");
                 break;
             }
             
@@ -364,7 +364,28 @@ push(valueType(a op b)); \
                 break;
             }
             
-            case OP_RETURN: return INTERPRET_OK;
+            case OP_RETURN:
+            {
+                Value result = pop();
+                --vm.frameCount;
+                
+                //esto se transforma en un resultado!
+                if(vm.frameCount == 0)
+                {
+                    //objfunction*
+                    pop();
+                    return INTERPRET_OK;
+                }
+                
+                vm.stackTop = frame->slots;
+                push(result);
+                
+                
+                frame = &vm.frames[vm.frameCount - 1];
+                
+                break;
+            }
+            
         }
         
     }
@@ -391,6 +412,7 @@ Value pop()
 InterpretResult interpret(const char* source)
 {
     //aqui se compile pero no hay nada en el stack!
+    //tienes un puntero y eso se aloca automaticamente
     ObjFunction* function = compile(source);
     
     if(function == NULL) return INTERPRET_COMPILE_ERROR;

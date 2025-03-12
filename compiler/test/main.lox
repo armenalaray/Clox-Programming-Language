@@ -1,20 +1,7 @@
-
-// Lox program to Find the Factorial Using for Loop
-
-
-var N = 120;
-
-{
-    var fact = 1;
-	var i;
-
-    // Loop from 1 to N to get the factorial
-    for (i = 1; i <= N; i = i + 1) 
-	{
-        fact = fact * i;
-    }
-
-    print fact;
+fun fib(n) {
+  if (n < 2) return n;
+  return fib(n - 2) + fib(n - 1);
 }
 
+print fib(3);
 

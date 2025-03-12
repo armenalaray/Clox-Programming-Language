@@ -20,7 +20,7 @@ for %%v in ("%prjdir%\build\*.obj") do set objs=!objs! %%v
 
 LINK /OUT:main.exe %LinkDebOpt% %objs%
 
-REM main %prjdir%\test\test.lox
+REM main %prjdir%\test\main.lox
 
 popd
 

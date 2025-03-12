@@ -165,6 +165,7 @@ static void emitBytes(uint8_t byte1, uint8_t byte2)
 
 static void emitReturn()
 {
+    emitByte(OP_NIL);
     emitByte(OP_RETURN);
 }
 
@@ -646,6 +647,26 @@ void forStatement()
     //aqui es donde tienes que saltar con el break!
 }
 
+static void returnStatement()
+{
+    if(current->type == TYPE_SCRIPT)
+    {
+        error("Can't return from top-level code.");
+    }
+    
+    if(match(TOKEN_SEMICOLON))
+    {
+        //regresa NIL
+        emitReturn();
+    }
+    else
+    {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+        emitByte(OP_RETURN);
+    }
+}
+
 void statement()
 {
     if(match(TOKEN_PRINT))
@@ -655,6 +676,10 @@ void statement()
     else if(match(TOKEN_IF))
     {
         ifStatement();
+    }
+    else if(match(TOKEN_RETURN))
+    {
+        returnStatement();
     }
     else if(match(TOKEN_WHILE))
     {
@@ -741,6 +766,7 @@ static void function(FunctionType type)
     
     //esto emite return y ya!
     ObjFunction* function = endCompiler();
+    
     emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
 }
 
