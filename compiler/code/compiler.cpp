@@ -730,6 +730,7 @@ static void synchronize()
     }
 }
 
+//esto nunca pasa
 //decalaration
 static void function(FunctionType type)
 {

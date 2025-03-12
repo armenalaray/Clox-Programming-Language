@@ -1,4 +1,5 @@
 
+#include <time.h>
 #include "string.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -16,14 +17,6 @@ static void resetStack()
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
 };
-
-void initVM()
-{
-    resetStack();
-    vm.objects = NULL;
-    initTable(&vm.strings);
-    initTable(&vm.globals);
-}
 
 void freeVM()
 {
@@ -95,6 +88,15 @@ static void runtimeError(const char * format, ...)
     resetStack();
 }
 
+static void defineNative(const char* name, NativeFn function)
+{
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(peek(1)), peek(0));
+    pop();
+    pop();
+}
+
 bool call(ObjFunction* function, int argCount)
 {
     //aqui ya esta creada la funcion!
@@ -127,6 +129,18 @@ static bool callValue(Value callee, int argCount)
         {
             case OBJ_FUNCTION:
             return call(AS_FUNCTION(callee), argCount);
+            
+            case OBJ_NATIVE:
+            {
+                //esta harcodeada!
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                
+                vm.stackTop -= argCount + 1;
+                push(result);
+                return true;
+            }
+            
             default:
             break;
         }
@@ -428,4 +442,18 @@ InterpretResult interpret(const char* source)
     return run();
 }
 
+static Value clockNative(int argCount, Value* args)
+{
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
 
+
+void initVM()
+{
+    resetStack();
+    vm.objects = NULL;
+    initTable(&vm.strings);
+    initTable(&vm.globals);
+    
+    defineNative("clock", clockNative);
+}
