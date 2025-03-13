@@ -25,6 +25,12 @@ void freeObject(Obj* obj)
 {
     switch(obj->type)
     {
+        case OBJ_CLOSURE:
+        {
+            //No estamos liberando el function
+            FREE(ObjClosure, obj);
+            break;
+        }
         case OBJ_FUNCTION:
         {
             ObjFunction* funcion = (ObjFunction*)obj;

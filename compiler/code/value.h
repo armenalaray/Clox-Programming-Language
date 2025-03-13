@@ -48,7 +48,7 @@ Obj is the base class!
 #define IS_NUMBER(value) ((value).type == VAL_NUMBER)
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 
-
+//las constantes van aqui
 typedef struct {
     int capacity;
     int count;

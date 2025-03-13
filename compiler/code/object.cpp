@@ -20,6 +20,15 @@ static Obj * allocateObject(size_t size, ObjType type)
     return obj;
 }
 
+ObjClosure* newClosure(ObjFunction* function)
+{
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    
+    closure->function = function;
+    
+    return closure;
+}
+
 static ObjString * allocateString(char * chars, int length, uint32_t hash)
 {
     //si funciona porque estoy allocando el sizeof(ObjString)
@@ -113,6 +122,10 @@ void printObject(Value value)
 {
     switch(OBJ_TYPE(value))
     {
+        case OBJ_CLOSURE:
+        printFunction(AS_CLOSURE(value)->function);
+        break;
+        
         case OBJ_STRING:
         printf("%s", AS_CSTRING(value));
         break;

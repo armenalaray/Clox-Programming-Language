@@ -184,6 +184,10 @@ static ObjFunction* endCompiler()
     
 #endif
     
+    //aqui se guarda arriba
+    /*
+Se guarda en unca constate en el chunk de arriba!
+*/
     current = current->enclosing;
     return function;
 }
@@ -768,7 +772,7 @@ static void function(FunctionType type)
     //esto emite return y ya!
     ObjFunction* function = endCompiler();
     
-    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+    emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
 }
 
 static void funDeclaration()
