@@ -1,8 +1,13 @@
-fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 2) + fib(n - 1);
+fun makeClosure(value) {
+  fun closure() {
+    print value;
+  }
+  return closure;
 }
 
-var start = clock();
-print fib(1);
-print clock() - start;
+//puedes tener una factoria de funciones
+var doughnut = makeClosure("doughnut");
+var bagel = makeClosure("bagel");
+
+doughnut();
+bagel();
