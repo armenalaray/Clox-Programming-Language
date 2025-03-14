@@ -1,13 +1,15 @@
-fun makeClosure(value) {
-  fun closure() {
-    print value;
+fun outer() {
+  var a = 1;
+  var b = 2;
+  fun middle() {
+    var c = 3;
+    var d = 4;
+    fun inner() {
+      print a + c + b + d;
+    }
   }
-  return closure;
+  
+  return middle();
 }
 
-//puedes tener una factoria de funciones
-var doughnut = makeClosure("doughnut");
-var bagel = makeClosure("bagel");
-
-doughnut();
-bagel();
+var a = outer();
