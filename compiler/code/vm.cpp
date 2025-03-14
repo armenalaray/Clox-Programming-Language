@@ -152,6 +152,12 @@ static bool callValue(Value callee, int argCount)
     return false;
 }
 
+static ObjUpvalue* captureUpvalue(Value* local)
+{
+    ObjUpvalue* createdUpvalue = newUpvalue(local);
+    return createdUpvalue;
+}
+
 static InterpretResult run()
 {
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
@@ -383,14 +389,47 @@ push(valueType(a op b)); \
             case OP_CLOSURE:
             {
                 //es lo mismo q una constante 
+                //esta es la que esta adentra
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 
                 ObjClosure* closure = newClosure(function);
+                
+                for(int i = 0; i < closure->upvalueCount; ++i)
+                {
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    
+                    if(isLocal)
+                    {
+                        //son como cajitas
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index);
+                    }
+                    else
+                    {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
                 
                 push(OBJ_VAL(closure));
                 
                 break;
             }
+            
+            case OP_GET_UPVALUE:
+            {
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
+            }
+            
+            case OP_SET_UPVALUE:
+            {
+                uint8_t slot = READ_BYTE();
+                //no se hace pop!
+                *frame->closure->upvalues[slot]->location = peek(0);
+                break;
+            }
+            
             
             case OP_RETURN:
             {

@@ -27,10 +27,20 @@ void freeObject(Obj* obj)
     {
         case OBJ_CLOSURE:
         {
-            //No estamos liberando el function
+            ObjClosure* closure = (ObjClosure*)obj;
+            //         sizeof element 64 bits
+            FREE_ARRAY(ObjClosure*, closure->upvalues, closure->upvalueCount);
+            
             FREE(ObjClosure, obj);
             break;
         }
+        
+        case OBJ_UPVALUE:
+        {
+            FREE(ObjUpvalue, obj);
+            break;
+        }
+        
         case OBJ_FUNCTION:
         {
             ObjFunction* funcion = (ObjFunction*)obj;

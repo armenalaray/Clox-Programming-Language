@@ -22,9 +22,19 @@ static Obj * allocateObject(size_t size, ObjType type)
 
 ObjClosure* newClosure(ObjFunction* function)
 {
+    
+    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+    
+    for(int i = 0; i < function->upvalueCount; ++i)
+    {
+        upvalues[i] = NULL;
+    }
+    
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
     
     closure->function = function;
+    closure->upvalues = upvalues;
+    closure->upvalueCount = function->upvalueCount;
     
     return closure;
 }
@@ -59,6 +69,14 @@ ObjNative* newNative(NativeFn function)
     
     native->function = function;
     return native;
+}
+
+ObjUpvalue* newUpvalue(Value* slot)
+{
+    //es un puntero
+    ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue,OBJ_UPVALUE); 
+    upvalue->location = slot;
+    return upvalue;
 }
 
 //FNV-1a hash function
@@ -126,6 +144,11 @@ void printObject(Value value)
         case OBJ_CLOSURE:
         printFunction(AS_CLOSURE(value)->function);
         break;
+        
+        case OBJ_UPVALUE:
+        printf("upvalue");
+        break;
+        
         
         case OBJ_STRING:
         printf("%s", AS_CSTRING(value));

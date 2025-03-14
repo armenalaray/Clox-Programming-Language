@@ -12,6 +12,7 @@ typedef enum
     OBJ_FUNCTION,
     OBJ_NATIVE,
     OBJ_CLOSURE,
+    OBJ_UPVALUE,
 }ObjType;
 
 struct Obj
@@ -47,11 +48,23 @@ typedef struct
     NativeFn function;
 }ObjNative;
 
+
+typedef struct
+{
+    Obj obj;
+    Value* location;
+}ObjUpvalue;
+
+
 //todas las funciones van a ser closures!
 typedef struct
 {
     Obj obj;
     ObjFunction* function;
+    //osea que no es un array normal fijo
+    //este es un array de punteros!
+    ObjUpvalue** upvalues;
+    int upvalueCount;
 }ObjClosure;
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
@@ -80,6 +93,7 @@ static inline bool isObjType(Value value, ObjType type)
 ObjFunction* newFunction();
 ObjNative* newNative(NativeFn function);
 ObjClosure* newClosure(ObjFunction* function);
+ObjUpvalue* newUpvalue(Value* slot);
 
 ObjString* takeString(char* chars, int length);
 ObjString* copyString(const char* chars, int length);
