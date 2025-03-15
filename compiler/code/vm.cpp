@@ -16,6 +16,7 @@ static void resetStack()
 {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
+    vm.openUpvalues = NULL;
 };
 
 void freeVM()
@@ -154,8 +155,63 @@ static bool callValue(Value callee, int argCount)
 
 static ObjUpvalue* captureUpvalue(Value* local)
 {
+    //the list is sorted
+    ObjUpvalue* prevUpvalue = NULL;
+    ObjUpvalue* upvalue = vm.openUpvalues;
+    
+    /*
+
+prev va a ser mi prev
+
+createdUpvalue
+
+siempre up value va a ser el next
+
+estan sorteadas de mayor a menor!
+
+ya no se repiten
+*/
+    while(upvalue != NULL && upvalue->location > local)
+    {
+        prevUpvalue = upvalue;
+        upvalue = upvalue->next;
+    }
+    
+    if(upvalue != NULL && upvalue->location == local)
+    {
+        return upvalue;
+    }
+    
     ObjUpvalue* createdUpvalue = newUpvalue(local);
+    
+    /*
+esta insertando en medio
+sorteadas
+*/
+    
+    createdUpvalue->next = upvalue;
+    
+    if(prevUpvalue == NULL)
+    {
+        vm.openUpvalues = createdUpvalue;
+    }
+    else
+    {
+        prevUpvalue->next = createdUpvalue;
+    }
+    
     return createdUpvalue;
+}
+
+static void closeUpvalues(Value* last)
+{
+    while(vm.openUpvalues != NULL && vm.openUpvalues->location >= last)
+    {
+        ObjUpvalue* upvalue = vm.openUpvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues = upvalue->next;
+    }
 }
 
 static InterpretResult run()
@@ -430,10 +486,19 @@ push(valueType(a op b)); \
                 break;
             }
             
+            case OP_CLOSE_UPVALUE:
+            {
+                //aqui esta en el heap
+                closeUpvalues(vm.stackTop - 1);
+                pop();
+                break;
+            }
             
             case OP_RETURN:
             {
                 Value result = pop();
+                
+                
                 --vm.frameCount;
                 
                 //esto se transforma en un resultado!
@@ -444,7 +509,11 @@ push(valueType(a op b)); \
                     return INTERPRET_OK;
                 }
                 
+                //lo tiene que cerrar!
                 vm.stackTop = frame->slots;
+                
+                closeUpvalues(frame->slots);
+                
                 push(result);
                 
                 

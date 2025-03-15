@@ -36,6 +36,8 @@ typedef struct
     Table globals;
     Table strings;
     
+    ObjUpvalue* openUpvalues;
+    
     //linked list
     Obj* objects;
 }VM;

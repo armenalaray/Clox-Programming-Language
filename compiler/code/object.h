@@ -49,10 +49,12 @@ typedef struct
 }ObjNative;
 
 
-typedef struct
+typedef struct ObjUpvalue
 {
     Obj obj;
     Value* location;
+    Value closed;
+    ObjUpvalue* next;
 }ObjUpvalue;
 
 

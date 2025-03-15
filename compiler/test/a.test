@@ -1,90 +1,69 @@
 == inner ==
-0000    8 OP_GET_UPVALUE      0
-0002    | OP_GET_UPVALUE      1
-0004    | OP_ADD
-0005    | OP_GET_UPVALUE      2
-0007    | OP_ADD
-0008    | OP_GET_UPVALUE      3
-0010    | OP_ADD
-0011    | OP_PRINT
-0012    9 OP_NIL
-0013    | OP_RETURN
-== middle ==
-0000    5 OP_CONSTANT         0 3
-0002    6 OP_CONSTANT         1 4
-0004    9 OP_CLOSURE          2 <fn inner>
-0006      |                     upvalue 0
-0008      |                     local 1
-0010      |                     upvalue 1
-0012      |                     local 2
-0014   10 OP_NIL
-0015    | OP_RETURN
+0000    5 OP_GET_UPVALUE      0
+0002    | OP_PRINT
+0003    6 OP_NIL
+0004    | OP_RETURN
 == outer ==
-0000    2 OP_CONSTANT         0 1
-0002    3 OP_CONSTANT         1 2
-0004   10 OP_CLOSURE          2 <fn middle>
-0006      |                     local 1
-0008      |                     local 2
-0010   11 OP_GET_LOCAL        3
-0012    | OP_RETURN
-0013   12 OP_NIL
-0014    | OP_RETURN
+0000    3 OP_CONSTANT         0 outer
+0002    6 OP_CLOSURE          1 <fn inner>
+0004      |                     local 1
+0006    7 OP_GET_LOCAL        2
+0008    | OP_RETURN
+0009    8 OP_NIL
+0010    | OP_RETURN
 ==  ==
-0000   12 OP_CLOSURE          1 <fn outer>
-0002    | OP_DEFINE_GLOBAL    0 outer
-0004   14 OP_GET_GLOBAL       3 outer
-0006    | OP_CALL             0
-0008    | OP_DEFINE_GLOBAL    2 a
-0010   15 OP_GET_GLOBAL       4 a
-0012    | OP_CALL             0
-0014    | OP_POP
-0015    | OP_NIL
-0016    | OP_RETURN
+0000    1 OP_CONSTANT         1 global
+0002    | OP_DEFINE_GLOBAL    0 x
+0004    8 OP_CLOSURE          3 <fn outer>
+0006    | OP_DEFINE_GLOBAL    2 outer
+0008   10 OP_GET_GLOBAL       5 outer
+0010    | OP_CALL             0
+0012    | OP_DEFINE_GLOBAL    4 a
+0014   11 OP_GET_GLOBAL       6 a
+0016    | OP_CALL             0
+0018    | OP_POP
+0019    | OP_NIL
+0020    | OP_RETURN
           [ <fn > ]
-0000   12 OP_CLOSURE          1 <fn outer>
-          [ <fn > ][ <fn outer> ]
-0002    | OP_DEFINE_GLOBAL    0 outer
+0000    1 OP_CONSTANT         1 global
+          [ <fn > ][ global ]
+0002    | OP_DEFINE_GLOBAL    0 x
           [ <fn > ]
-0004   14 OP_GET_GLOBAL       3 outer
+0004    8 OP_CLOSURE          3 <fn outer>
           [ <fn > ][ <fn outer> ]
-0006    | OP_CALL             0
-          [ <fn > ][ <fn outer> ]
-0000    2 OP_CONSTANT         0 1
-          [ <fn > ][ <fn outer> ][ 1 ]
-0002    3 OP_CONSTANT         1 2
-          [ <fn > ][ <fn outer> ][ 1 ][ 2 ]
-0004   10 OP_CLOSURE          2 <fn middle>
-0006      |                     local 1
-0008      |                     local 2
-          [ <fn > ][ <fn outer> ][ 1 ][ 2 ][ <fn middle> ]
-0010   11 OP_GET_LOCAL        3
-          [ <fn > ][ <fn outer> ][ 1 ][ 2 ][ <fn middle> ][ <fn middle> ]
-0012    | OP_RETURN
-          [ <fn > ][ <fn middle> ]
-0008    | OP_DEFINE_GLOBAL    2 a
+0006    | OP_DEFINE_GLOBAL    2 outer
           [ <fn > ]
-0010   15 OP_GET_GLOBAL       4 a
-          [ <fn > ][ <fn middle> ]
-0012    | OP_CALL             0
-          [ <fn > ][ <fn middle> ]
-0000    5 OP_CONSTANT         0 3
-          [ <fn > ][ <fn middle> ][ 3 ]
-0002    6 OP_CONSTANT         1 4
-          [ <fn > ][ <fn middle> ][ 3 ][ 4 ]
-          
-0004    9 OP_CLOSURE          2 <fn inner>
-                                //estos ya estan definidos
-0006      |                     upvalue 0
-0008      |                     local 1
-0010      |                     upvalue 1
-0012      |                     local 2
-          [ <fn > ][ <fn middle> ][ 3 ][ 4 ][ <fn inner> ]
-0014   10 OP_NIL
-          [ <fn > ][ <fn middle> ][ 3 ][ 4 ][ <fn inner> ][ nil ]
-0015    | OP_RETURN
+0008   10 OP_GET_GLOBAL       5 outer
+          [ <fn > ][ <fn outer> ]
+0010    | OP_CALL             0
+          [ <fn > ][ <fn outer> ]
+0000    3 OP_CONSTANT         0 outer
+          [ <fn > ][ <fn outer> ][ outer ]
+0002    6 OP_CLOSURE          1 <fn inner>
+0004      |                     local 1
+          [ <fn > ][ <fn outer> ][ outer ][ <fn inner> ]
+0006    7 OP_GET_LOCAL        2
+          [ <fn > ][ <fn outer> ][ outer ][ <fn inner> ][ <fn inner> ]
+          //aqui se cerro!
+0008    | OP_RETURN
+          [ <fn > ][ <fn inner> ]
+0012    | OP_DEFINE_GLOBAL    4 a
+          [ <fn > ]
+0014   11 OP_GET_GLOBAL       6 a
+          [ <fn > ][ <fn inner> ]
+0016    | OP_CALL             0
+          [ <fn > ][ <fn inner> ]
+0000    5 OP_GET_UPVALUE      0
+          [ <fn > ][ <fn inner> ][ outer ]
+0002    | OP_PRINT
+outer
+          [ <fn > ][ <fn inner> ]
+0003    6 OP_NIL
+          [ <fn > ][ <fn inner> ][ nil ]
+0004    | OP_RETURN
           [ <fn > ][ nil ]
-0014    | OP_POP
+0018    | OP_POP
           [ <fn > ]
-0015    | OP_NIL
+0019    | OP_NIL
           [ <fn > ][ nil ]
-0016    | OP_RETURN
+0020    | OP_RETURN

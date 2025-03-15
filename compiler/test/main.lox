@@ -1,12 +1,11 @@
+var x = "global";
 fun outer() {
-  var x = "outside";
+  var x = "outer";
   fun inner() {
     print x;
   }
-
   return inner;
 }
 
-var closure = outer();
-//aqui ya se borra del stack outside
-closure();
+var a = outer();
+a();

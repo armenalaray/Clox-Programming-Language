@@ -74,8 +74,10 @@ static void initCompiler(Compiler * compiler, FunctionType type)
     current->function->name = copyString(parser.previous.start, parser.previous.length);
     
     //aqui estan todas
+    //la quieres capturar?
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -320,6 +322,7 @@ void addLocal(Token name)
     
     local->name = name;
     local->depth = -1;
+    local->isCaptured = false;
     
 }
 
@@ -457,10 +460,19 @@ static void endScope()
 {
     --current->scopeDepth;
     
+    //aqui va de arriba hacia abajo borrando hasta q llega a current->scopeDepth
+    //esas no las borra
     while(current->localCount > 0 && current->locals[current->localCount - 1].depth > current->scopeDepth)
     {
-        //estas eliminando variables
-        emitByte(OP_POP);
+        if(current->locals[current->localCount - 1].isCaptured)
+        {
+            emitByte(OP_CLOSE_UPVALUE);
+        }
+        else
+        {
+            emitByte(OP_POP);
+        }
+        
         --current->localCount;
     }
 }
@@ -869,6 +881,8 @@ static int resolveUpvalue(Compiler* compiler, Token* name)
     
     if(local != -1)
     {
+        //aqui si la encontró
+        compiler->enclosing->locals[local].isCaptured = true;
         return addUpvalue(compiler, (uint8_t)local, true);
     }
     
