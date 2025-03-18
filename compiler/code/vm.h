@@ -24,9 +24,11 @@ typedef struct
     Value* slots;
 }CallFrame;
 
+//los roots son cosas que a fuerzas no vas a borrar
 
 typedef struct
 {
+    //grises
     CallFrame frames[FRAMES_MAX];
     int frameCount;
     
@@ -34,12 +36,21 @@ typedef struct
     Value * stackTop;
     
     Table globals;
-    Table strings;
     
     ObjUpvalue* openUpvalues;
     
-    //linked list
+    //blanca
+    Table strings;
+    
+    
+    //todos
     Obj* objects;
+    
+    //grabage collector
+    int grayCount;
+    int grayCapacity;
+    Obj** grayStack;
+    
 }VM;
 
 extern VM vm;

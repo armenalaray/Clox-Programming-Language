@@ -65,6 +65,7 @@ typedef struct
 {
     Obj obj;
     ObjFunction* function;
+    //aqui es donde si puede pasar que ya se hayan 
     ObjUpvalue** upvalues;
     int upvalueCount;
 }ObjClosure;

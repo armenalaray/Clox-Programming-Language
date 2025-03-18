@@ -19,6 +19,7 @@ typedef struct
 }Table;
 
 
+void tableRemoveWhite(Table* table);
 void markTable(Table* table);
 void initTable(Table* table);
 void freeTable(Table* table);

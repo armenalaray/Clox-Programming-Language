@@ -309,6 +309,7 @@ push(valueType(a op b)); \
             {
                 ObjString* name = READ_STRING();
                 //NOTE: since it is new we need to delete it because we expect to be defined before
+                //tableset funciona hacer set y insertar nueva
                 if(tableSet(&vm.globals, name, peek(0)))
                 {
                     tableDelete(&vm.globals, name);
@@ -570,8 +571,14 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
+    
+    vm.grayCount = 0;
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
+    
     initTable(&vm.strings);
     initTable(&vm.globals);
     
     defineNative("clock", clockNative);
+    
 }

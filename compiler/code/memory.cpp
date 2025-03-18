@@ -98,6 +98,7 @@ void markValue(Value value)
 void markObject(Obj* obj)
 {
     if(obj == NULL) return;
+    if(obj->isMarked) return;
     
 #ifdef DEBUG_LOG_GC
     //tecnicamente estas imprmiendo el entry
@@ -106,6 +107,16 @@ void markObject(Obj* obj)
     printf("\n");
 #endif
     obj->isMarked = true;
+    
+    if(vm.grayCapacity < vm.grayCount + 1)
+    {
+        vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
+        vm.grayStack = (Obj**)realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+        
+        if(vm.grayStack == NULL) exit(1);
+    }
+    
+    vm.grayStack[vm.grayCount++] = obj;
 }
 
 //esta marca el stack!
@@ -132,6 +143,97 @@ static void markRoots()
     markCompilerRoots();
 }
 
+static void markArray(ValueArray* array)
+{
+    for(int i = 0; i < array->count; ++i)
+    {
+        markValue(array->values[i]);
+    }
+}
+
+void blackenObject(Obj* obj)
+{
+#ifdef DEBUG_LOG_GC
+    
+    printf("%p blacken ", (void*)obj);
+    printValue(OBJ_VAL(obj));
+    printf("\n");
+    
+#endif
+    
+    switch(obj->type)
+    {
+        case OBJ_CLOSURE:
+        {
+            ObjClosure* closure = (ObjClosure*)obj;
+            markObject((Obj*)closure->function);
+            for(int i = 0; i < closure->upvalueCount; ++i)
+            {
+                markObject((Obj*)closure->upvalues[i]);
+            }
+            break;
+        }
+        
+        case OBJ_FUNCTION:
+        {
+            ObjFunction* function = (ObjFunction*)obj;
+            markObject((Obj*)function->name);
+            markArray(&function->chunk.constants);
+            break;
+        }
+        case OBJ_UPVALUE:
+        {
+            markValue(((ObjUpvalue*)obj)->closed);
+            break;
+        }
+        case OBJ_STRING:
+        case OBJ_NATIVE:
+        {
+            break;
+        }
+    }
+}
+
+static void traceReferences()
+{
+    //esta mierda sube!
+    while(vm.grayCount > 0)
+    {
+        //-- --  --  ---
+        //-- -- -- -- DEPTH FIRST SEARCH
+        Obj* obj = vm.grayStack[--vm.grayCount];
+        blackenObject(obj);
+    }
+}
+
+void sweep()
+{
+    Obj* prev = NULL;
+    Obj* obj = vm.objects;
+    while(obj != NULL)
+    {
+        if(obj->isMarked)
+        {
+            obj->isMarked = false;
+            prev = obj;
+            obj = obj->next;
+        }
+        else
+        {
+            Obj* unreached = obj;
+            
+            obj = obj->next;
+            
+            if(prev == NULL)
+                vm.objects = obj;
+            else
+                prev->next = obj;
+            
+            freeObject(unreached);
+        }
+    }
+}
+
 void collectGarbage()
 {
     
@@ -140,6 +242,10 @@ void collectGarbage()
 #endif
     
     markRoots();
+    traceReferences();
+    tableRemoveWhite(&vm.strings);
+    sweep();
+    //Fueron marcados todos!
     
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");
@@ -155,4 +261,6 @@ void freeObjects()
         freeObject(obj);
         obj = next;
     }
+    
+    free(vm.grayStack);
 }
