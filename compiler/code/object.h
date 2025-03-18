@@ -18,6 +18,7 @@ typedef enum
 struct Obj
 {
     ObjType type;
+    bool isMarked;
     struct Obj* next;
 };
 
@@ -54,6 +55,7 @@ typedef struct ObjUpvalue
     Obj obj;
     Value* location;
     Value closed;
+    //esta es la que importa!
     ObjUpvalue* next;
 }ObjUpvalue;
 
@@ -63,8 +65,6 @@ typedef struct
 {
     Obj obj;
     ObjFunction* function;
-    //osea que no es un array normal fijo
-    //este es un array de punteros!
     ObjUpvalue** upvalues;
     int upvalueCount;
 }ObjClosure;

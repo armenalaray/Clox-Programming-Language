@@ -5,6 +5,7 @@
 
 
 #include "common.h"
+#include "value.h"
 
 #define GROW_CAPACITY(capacity) \
 ((capacity) < 8 ? 8 : (capacity) * 2)
@@ -23,6 +24,10 @@ reallocate(pointer, sizeof(type), 0);
 (type*)reallocate(NULL, 0, sizeof(type) * (length))
 
 void * reallocate(void * pointer, size_t oldSize, size_t newSize);
+
+void markObject(Obj* obj);
+void markValue(Value value);
+void collectGarbage();
 
 void freeObjects();
 

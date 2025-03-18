@@ -1,11 +1,20 @@
-var x = "global";
-fun outer() {
-  var x = "outer";
-  fun inner() {
-    print x;
+var globalOne;
+var globalTwo;
+
+fun main() {
+  for (var a = 1; a <= 2; a = a + 1) {
+    fun closure() {
+      print a;
+    }
+    if (globalOne == nil) {
+      globalOne = closure;
+    } else {
+      globalTwo = closure;
+    }
+    //a se cierra en 3
   }
-  return inner;
 }
 
-var a = outer();
-a();
+main();
+globalOne();
+globalTwo();

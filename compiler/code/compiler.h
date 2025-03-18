@@ -75,6 +75,7 @@ typedef struct
     bool panicMode;
 }Parser;
 
+void markCompilerRoots();
 void call(bool canAssign);
 void string(bool canAssign);
 void and_(bool canAssign);

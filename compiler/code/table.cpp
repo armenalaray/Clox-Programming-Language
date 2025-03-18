@@ -175,6 +175,18 @@ void tableAddAll(Table* from, Table* to)
     }
 }
 
+void markTable(Table* table)
+{
+    for(int i = 0; i < table->capacity; ++i)
+    {
+        //esque las dos pueden estar heap allocated
+        Entry* entry = &table->entries[i];
+        
+        markObject((Obj*)entry->key);
+        
+        markValue(entry->value);
+    }
+}
 
 
 
