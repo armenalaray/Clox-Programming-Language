@@ -38,8 +38,8 @@ bool isFalsey(Value value)
 
 static void concatenate()
 {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+    ObjString* b = AS_STRING(peek(0));
+    ObjString* a = AS_STRING(peek(1));
     
     int length = a->length + b->length;
     //it is because here we have allocate we need to free it!
@@ -51,6 +51,9 @@ static void concatenate()
     chars[length] = '\0';
     
     ObjString* result = takeString(chars, length);
+    
+    pop();
+    pop();
     
     push(OBJ_VAL(result));
 }
@@ -93,7 +96,7 @@ static void defineNative(const char* name, NativeFn function)
 {
     push(OBJ_VAL(copyString(name, (int)strlen(name))));
     push(OBJ_VAL(newNative(function)));
-    tableSet(&vm.globals, AS_STRING(peek(1)), peek(0));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
     pop();
     pop();
 }
@@ -450,6 +453,7 @@ push(valueType(a op b)); \
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 
                 ObjClosure* closure = newClosure(function);
+                push(OBJ_VAL(closure));
                 
                 for(int i = 0; i < closure->upvalueCount; ++i)
                 {
@@ -467,7 +471,6 @@ push(valueType(a op b)); \
                     }
                 }
                 
-                push(OBJ_VAL(closure));
                 
                 break;
             }
@@ -553,11 +556,15 @@ InterpretResult interpret(const char* source)
     ObjFunction* function = compile(source);
     
     if(function == NULL) return INTERPRET_COMPILE_ERROR;
+    
     push(OBJ_VAL(function));
     ObjClosure* closure = newClosure(function);
     pop();
+    
     push(OBJ_VAL(closure));
+    
     call(closure, 0);
+    
     return run();
 }
 
@@ -575,6 +582,9 @@ void initVM()
     vm.grayCount = 0;
     vm.grayCapacity = 0;
     vm.grayStack = NULL;
+    
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024*1024;
     
     initTable(&vm.strings);
     initTable(&vm.globals);

@@ -7,6 +7,8 @@
 #include "common.h"
 #include "value.h"
 
+#define GC_HEAP_GROW_FACTOR 2
+
 #define GROW_CAPACITY(capacity) \
 ((capacity) < 8 ? 8 : (capacity) * 2)
 

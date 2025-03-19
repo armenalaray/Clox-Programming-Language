@@ -142,6 +142,8 @@ bool tableGet(Table* table, ObjString* key, Value* value)
 {
     if(table->count == 0) return false;
     
+    //if(key->chars
+    
     Entry* entry = findEntry(table->entries, table->capacity, key);
     if(entry->key == NULL) return false;
     
@@ -195,7 +197,7 @@ void tableRemoveWhite(Table* table)
     for(int i = 0; i < table->capacity; ++i)
     {
         Entry* entry = &table->entries[i];
-        if(entry->key != NULL && entry->key->obj.isMarked)
+        if(entry->key != NULL && !entry->key->obj.isMarked)
             tableDelete(table, entry->key);
     }
 }

@@ -785,6 +785,7 @@ static void function(FunctionType type)
     //esto emite return y ya!
     ObjFunction* function = endCompiler();
     
+    //no esta en ningun lado
     emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
     
     for(int i = 0; i < function->upvalueCount; ++i)
@@ -794,15 +795,13 @@ static void function(FunctionType type)
     }
 }
 
+//aqui es donde estamos
 static void funDeclaration()
 {
     uint8_t index = parseVariable("Expect function name.");
     
-    //con funciones si se puede!
-    //aqui estas en global!
     markInitialized();
     function(TYPE_FUNCTION);
-    //store that function back into the variable we declared
     
     defineVariable(index);
 }

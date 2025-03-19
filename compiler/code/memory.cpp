@@ -14,16 +14,15 @@
 
 void * reallocate(void * pointer, size_t oldSize, size_t newSize)
 {
+    vm.bytesAllocated += newSize - oldSize;
+    
     if(newSize > oldSize)
     {
 #ifdef DEBUG_STRESS_GC
-        //entonces se llamaría a si misma hehe!
-        //garbageCollect llama a reallocate() para hacer free!
         collectGarbage();
-        //for allocation!
-        //during call boundaries!
-        //backward jumps!
 #endif
+        if(vm.bytesAllocated > vm.nextGC)
+            collectGarbage();
     }
     
     if (newSize == 0)
@@ -32,9 +31,6 @@ void * reallocate(void * pointer, size_t oldSize, size_t newSize)
         return NULL;
     }
     
-    /*
-Todo lo hace realloc!
-*/
     void *result = realloc(pointer, newSize);
     if(result == NULL) exit(1);
     return result;
@@ -167,6 +163,7 @@ void blackenObject(Obj* obj)
         {
             ObjClosure* closure = (ObjClosure*)obj;
             markObject((Obj*)closure->function);
+            
             for(int i = 0; i < closure->upvalueCount; ++i)
             {
                 markObject((Obj*)closure->upvalues[i]);
@@ -239,15 +236,25 @@ void collectGarbage()
     
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin\n");
+    
+    size_t before = vm.bytesAllocated;
+    
 #endif
+    
+    
     
     markRoots();
     traceReferences();
     tableRemoveWhite(&vm.strings);
     sweep();
-    //Fueron marcados todos!
+    
+    //solo si se llama al collector crece
+    vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
     
 #ifdef DEBUG_LOG_GC
+    
+    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
+    
     printf("-- gc end\n");
 #endif
 }

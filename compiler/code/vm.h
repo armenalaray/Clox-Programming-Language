@@ -10,6 +10,7 @@
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
+
 typedef enum {
     INTERPRET_OK,
     INTERPRET_COMPILE_ERROR,
@@ -47,6 +48,9 @@ typedef struct
     Obj* objects;
     
     //grabage collector
+    size_t bytesAllocated;
+    size_t nextGC;
+    
     int grayCount;
     int grayCapacity;
     Obj** grayStack;
