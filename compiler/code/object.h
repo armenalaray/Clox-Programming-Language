@@ -13,6 +13,7 @@ typedef enum
     OBJ_NATIVE,
     OBJ_CLOSURE,
     OBJ_UPVALUE,
+    OBJ_CLASS,
 }ObjType;
 
 struct Obj
@@ -70,9 +71,22 @@ typedef struct
     int upvalueCount;
 }ObjClosure;
 
+typedef struct
+{
+    Obj obj;
+    ObjString* name;
+}ObjClass;
+
+typedef struct
+{
+    
+}ObjInstance;
+
+
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
 //Va a haber una main function!
+#define IS_CLASS(value) isObjType(value, OBJ_CLASS)
 #define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
 #define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
@@ -80,6 +94,8 @@ typedef struct
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
 
 
+
+#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
 #define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
 
 #define AS_FUNCTION(value) ((ObjFunction*)AS_OBJ(value))
@@ -93,6 +109,7 @@ static inline bool isObjType(Value value, ObjType type)
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
+ObjClass* newClass(ObjString* name);
 ObjFunction* newFunction();
 ObjNative* newNative(NativeFn function);
 ObjClosure* newClosure(ObjFunction* function);

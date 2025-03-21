@@ -26,6 +26,15 @@ static Obj * allocateObject(size_t size, ObjType type)
     return obj;
 }
 
+ObjClass* newClass(ObjString* name)
+{
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+    
+    klass->name = name;
+    
+    return klass;
+}
+
 ObjClosure* newClosure(ObjFunction* function)
 {
     ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
@@ -150,6 +159,10 @@ void printObject(Value value)
 {
     switch(OBJ_TYPE(value))
     {
+        case OBJ_CLASS:
+        printf("%s", AS_CLASS(value)->name->chars);
+        break;
+        
         case OBJ_CLOSURE:
         printFunction(AS_CLOSURE(value)->function);
         break;

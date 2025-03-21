@@ -1,20 +1,4 @@
-var globalOne;
-var globalTwo;
-
-fun main() {
-  for (var a = 1; a <= 2; a = a + 1) {
-    fun closure() {
-      print a;
-    }
-    if (globalOne == nil) {
-      globalOne = closure;
-    } else {
-      globalTwo = closure;
-    }
-    //a se cierra en 3
-  }
-}
-
-main();
-globalOne();
-globalTwo();
+//se conecta por el stack
+//se mete el nombre y el objeto que es class
+class Brioche {} 
+print Brioche;

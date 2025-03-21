@@ -13,6 +13,7 @@ typedef enum
     OP_GET_UPVALUE,
     OP_SET_UPVALUE,
     OP_CLOSE_UPVALUE,
+    OP_CLASS,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,

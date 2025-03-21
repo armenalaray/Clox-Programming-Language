@@ -806,9 +806,27 @@ static void funDeclaration()
     defineVariable(index);
 }
 
+static void classDeclaration()
+{
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    uint8_t index = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitBytes(OP_CLASS, index);
+    defineVariable(index);
+    //aqui ya se puede usar!
+
+    consume(TOKEN_LEFT_BRACE, "Expect { before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expect } after class body.");
+}
+
 void declaration()
 {
-    if(match(TOKEN_FUN))
+    if(match(TOKEN_CLASS))
+    {
+        classDeclaration();
+    }
+    else if(match(TOKEN_FUN))
     {
         funDeclaration();
     }

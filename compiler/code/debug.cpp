@@ -18,6 +18,7 @@ static int simpleInstruction(const char* name, int offset)
     return offset + 1;
 }
 
+//estas son para las funciones q tienen data en la constant table!
 static int constantInstruction(const char* name, Chunk * chunk, int offset)
 {
     uint8_t index = chunk->code[offset + 1];
@@ -120,6 +121,9 @@ int disassembleInstruction(Chunk* chunk, int offset)
         case OP_CALL:
         return byteInstruction("OP_CALL", chunk, offset);
         
+        case OP_CLASS:
+        return constantInstruction("OP_CLASS", chunk, offset);
+
         case OP_CLOSURE:
         {
             ++offset;

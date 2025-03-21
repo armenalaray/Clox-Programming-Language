@@ -445,7 +445,12 @@ push(valueType(a op b)); \
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
-            
+            case OP_CLASS:
+            {
+                push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            }
+
             case OP_CLOSURE:
             {
                 //es lo mismo q una constante 
@@ -585,6 +590,7 @@ void initVM()
     
     vm.bytesAllocated = 0;
     vm.nextGC = 1024*1024;
+    //vm.nextGC = 64;
     
     initTable(&vm.strings);
     initTable(&vm.globals);
