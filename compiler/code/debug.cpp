@@ -121,6 +121,9 @@ int disassembleInstruction(Chunk* chunk, int offset)
         case OP_CALL:
         return byteInstruction("OP_CALL", chunk, offset);
         
+        case OP_METHOD:
+        return constantInstruction("OP_METHOD", chunk, offset);
+
         case OP_GET_PROPERTY:
         return constantInstruction("OP_GET_PROPERTY", chunk, offset);
 

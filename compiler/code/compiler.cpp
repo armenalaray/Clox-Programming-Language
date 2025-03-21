@@ -805,6 +805,7 @@ static void function(FunctionType type)
     //no esta en ningun lado
     emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
     
+    //despues se inicializan los upvalues!
     for(int i = 0; i < function->upvalueCount; ++i)
     {
         emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
@@ -823,40 +824,17 @@ static void funDeclaration()
     defineVariable(index);
 }
 
-static void classDeclaration()
+static void method()
 {
-    consume(TOKEN_IDENTIFIER, "Expect class name.");
-    uint8_t index = identifierConstant(&parser.previous);
-    declareVariable();
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
 
-    emitBytes(OP_CLASS, index);
-    defineVariable(index);
-    //aqui ya se puede usar!
+    uint8_t name = identifierConstant(&parser.previous);
 
-    consume(TOKEN_LEFT_BRACE, "Expect { before class body.");
-    consume(TOKEN_RIGHT_BRACE, "Expect } after class body.");
-}
+    FunctionType type = TYPE_FUNCTION;
+    function(type);
 
-void declaration()
-{
-    if(match(TOKEN_CLASS))
-    {
-        classDeclaration();
-    }
-    else if(match(TOKEN_FUN))
-    {
-        funDeclaration();
-    }
-    else if(match(TOKEN_VAR))
-    {
-        varDeclaration();
-    }
-    else
-    {
-        statement();
-    }
-    
-    if(parser.panicMode) synchronize();
+    emitBytes(OP_METHOD, name);
+
 }
 
 //shadowing
@@ -934,6 +912,7 @@ static int resolveUpvalue(Compiler* compiler, Token* name)
 }
 
 //esto hace globales y locales
+//no puedes llamar a namedVariable hasta que hayas definido la variable
 static void namedVariable(Token name, bool canAssign)
 {
     uint8_t getOp, setOp;
@@ -968,6 +947,56 @@ static void namedVariable(Token name, bool canAssign)
     {
         emitBytes(getOp, (uint8_t)arg);
     }
+}
+
+
+static void classDeclaration()
+{
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+
+    Token className = parser.previous;
+
+    uint8_t index = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitBytes(OP_CLASS, index);
+    defineVariable(index);
+    //aqui ya se puede usar!
+
+    namedVariable(className, false);
+
+    consume(TOKEN_LEFT_BRACE, "Expect { before class body.");
+
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF))
+    {
+        method();
+    }
+    
+    consume(TOKEN_RIGHT_BRACE, "Expect } after class body.");
+
+    emitByte(OP_POP);
+}
+
+void declaration()
+{
+    if(match(TOKEN_CLASS))
+    {
+        classDeclaration();
+    }
+    else if(match(TOKEN_FUN))
+    {
+        funDeclaration();
+    }
+    else if(match(TOKEN_VAR))
+    {
+        varDeclaration();
+    }
+    else
+    {
+        statement();
+    }
+    
+    if(parser.panicMode) synchronize();
 }
 
 void variable(bool canAssign)

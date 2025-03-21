@@ -16,6 +16,7 @@ typedef enum
     OP_CLASS,
     OP_GET_PROPERTY,
     OP_SET_PROPERTY,
+    OP_METHOD,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,

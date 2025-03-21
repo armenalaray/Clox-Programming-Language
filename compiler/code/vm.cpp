@@ -224,6 +224,14 @@ static void closeUpvalues(Value* last)
     }
 }
 
+static void defineMethod(ObjString* name)
+{
+    Value method = peek(0);
+    ObjClass* klass =  AS_CLASS(peek(1));
+    tableSet(&klass->methods, name, method);
+    pop();
+}
+
 static InterpretResult run()
 {
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
@@ -451,6 +459,12 @@ push(valueType(a op b)); \
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+
+            case OP_METHOD:
+            {
+                defineMethod(READ_STRING());
                 break;
             }
 
