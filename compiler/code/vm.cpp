@@ -133,6 +133,13 @@ static bool callValue(Value callee, int argCount)
     {
         switch(OBJ_TYPE(callee))
         {
+            case OBJ_CLASS:
+            {
+                ObjClass* klass = AS_CLASS(callee);
+                vm.stackTop[-1-argCount] = OBJ_VAL(newInstance(klass));                
+                return true;
+            }
+
             case OBJ_CLOSURE:
             return call(AS_CLOSURE(callee), argCount);
             
@@ -438,6 +445,7 @@ push(valueType(a op b)); \
             {
                 int argCount = READ_BYTE();
                 //este es el objeto al q vas a llamar
+                //ahi esta un value con la
                 if(!callValue(peek(argCount), argCount))
                 {
                     return INTERPRET_RUNTIME_ERROR;
@@ -445,6 +453,25 @@ push(valueType(a op b)); \
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
+
+            case OP_GET_PROPERTY:
+            {
+                //esto esta 
+                ObjInstance* instance = AS_INSTANCE(peek(0)); 
+                ObjString* name = READ_STRING();
+
+                Value value;
+                if(tableGet(&instance->fields, name, &value))
+                {
+                    pop();
+                    push(value);
+                    break;
+                }
+
+                runtimeError("Undefined property '%s'.", name->chars);
+                break;
+            }
+
             case OP_CLASS:
             {
                 push(OBJ_VAL(newClass(READ_STRING())));

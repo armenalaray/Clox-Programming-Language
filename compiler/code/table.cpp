@@ -2,6 +2,7 @@
 #include "string.h"
 #include "memory.h"
 #include "table.h"
+#include "object.h"
 
 void initTable(Table* table)
 {

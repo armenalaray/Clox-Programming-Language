@@ -46,6 +46,15 @@ void freeObject(Obj* obj)
     
     switch(obj->type)
     {
+        case OBJ_INSTANCE:
+        {
+            //no es dueña de class
+            ObjInstance* instance = (ObjInstance*)obj;
+            freeTable(&instance->fields);
+            FREE(ObjInstance, obj);
+            break;
+        }
+
         case OBJ_CLASS:
         {
             FREE(ObjClass, obj);
@@ -165,6 +174,14 @@ void blackenObject(Obj* obj)
     
     switch(obj->type)
     {
+        case OBJ_INSTANCE:
+        {
+            ObjInstance* instance = (ObjInstance*)obj;
+            markObject((Obj*)instance->klass);
+            markTable(&instance->fields);
+            break;
+        }
+
         case OBJ_CLASS:
         {
             ObjClass* klass = (ObjClass*)obj;

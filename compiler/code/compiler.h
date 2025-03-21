@@ -76,6 +76,7 @@ typedef struct
 }Parser;
 
 void markCompilerRoots();
+void dot(bool canAssign);
 void call(bool canAssign);
 void string(bool canAssign);
 void and_(bool canAssign);

@@ -1,4 +1,2 @@
-//se conecta por el stack
-//se mete el nombre y el objeto que es class
-class Brioche {} 
-print Brioche;
+class Brioche {}
+print Brioche();
