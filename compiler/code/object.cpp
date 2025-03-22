@@ -26,7 +26,17 @@ static Obj * allocateObject(size_t size, ObjType type)
     return obj;
 }
 
-ObjInstance* newInstance(ObjClass* klass)
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method)
+{
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+
+    bound->method = method;
+    bound->receiver = receiver;
+
+    return bound;
+}
+
+ObjInstance* newInstance(ObjClass *klass)
 {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
     instance->klass = klass;
@@ -167,6 +177,10 @@ void printObject(Value value)
 {
     switch(OBJ_TYPE(value))
     {
+        case OBJ_BOUND_METHOD:
+        printFunction(AS_BOUND_METHOD(value)->method->function);
+        break;
+
         case OBJ_INSTANCE:
         printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
         break;

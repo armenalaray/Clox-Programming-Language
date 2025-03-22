@@ -46,6 +46,12 @@ void freeObject(Obj* obj)
     
     switch(obj->type)
     {
+        case OBJ_BOUND_METHOD:
+        {
+            FREE(ObjBoundMethod, obj);
+            break;
+        }
+
         case OBJ_INSTANCE:
         {
             //no es dueña de class
@@ -176,6 +182,14 @@ void blackenObject(Obj* obj)
     
     switch(obj->type)
     {
+        case OBJ_BOUND_METHOD:
+        {
+            ObjBoundMethod* bound = (ObjBoundMethod*)obj;
+            markValue(bound->receiver);
+            markObject((Obj*)bound->method);
+            break;
+        }
+
         case OBJ_INSTANCE:
         {
             ObjInstance* instance = (ObjInstance*)obj;
