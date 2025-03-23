@@ -50,6 +50,19 @@ static int jumpInstruction(const char * name, int sign, Chunk* chunk, int offset
     return offset + 3;
 }
 
+static int invokeInstruction(const char* name, Chunk* chunk, int offset)
+{
+    uint8_t index = chunk->code[offset + 1];
+    uint8_t argCount = chunk->code[offset + 2];
+
+    //NOTE: Youarehere
+
+    printf("%-16s (%d args) %4d '", name, argCount, index); 
+    printValue(chunk->constants.values[index]);
+    printf("'\n");
+    return offset + 3;
+}
+
 int disassembleInstruction(Chunk* chunk, int offset)
 {
     printf("%04d ", offset);
@@ -120,7 +133,10 @@ int disassembleInstruction(Chunk* chunk, int offset)
         
         case OP_CALL:
         return byteInstruction("OP_CALL", chunk, offset);
-        
+     
+        case OP_INVOKE:
+        return invokeInstruction("OP_INVOKE", chunk, offset);
+
         case OP_METHOD:
         return constantInstruction("OP_METHOD", chunk, offset);
 
