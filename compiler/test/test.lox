@@ -1,7 +1,26 @@
-fun a() { b(); }
-fun b() { c(); }
-fun c() {
-  c("too", "many");
+class Nested {
+//es una local que esta aqui!
+  //esta si es un metodo
+  //esta si esta en sus locales
+  method() {
+    //esta no es un metodo!
+
+    class Alejandro
+    {
+        method2()
+        {
+            fun function() {
+                print this;
+            }
+
+            function();
+        }
+        
+    }
+
+    return Alejandro();
+  }
 }
 
-a();
+//this should print Nested Instance
+Nested().method().method2();

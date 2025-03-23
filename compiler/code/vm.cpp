@@ -24,6 +24,7 @@ void freeVM()
     freeTable(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();
+    vm.initString = NULL;
 }
 
 static Value peek(int distance)
@@ -136,7 +137,7 @@ static bool callValue(Value callee, int argCount)
             case OBJ_BOUND_METHOD:
             {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
-
+                vm.stackTop[-1-argCount] = bound->receiver;
                 return call(bound->method, argCount);
             }
 
@@ -144,6 +145,19 @@ static bool callValue(Value callee, int argCount)
             {
                 ObjClass* klass = AS_CLASS(callee);
                 vm.stackTop[-1-argCount] = OBJ_VAL(newInstance(klass));                
+
+
+                Value initializer;
+                if(tableGet(&klass->methods, vm.initString, &initializer))
+                {
+                    return call(AS_CLOSURE(initializer), argCount);
+                }
+                else if(argCount != 0)
+                {
+                    runtimeError("Expected 0 arguments but got %d.", argCount);
+                    return false;
+                }
+
                 return true;
             }
 
@@ -560,6 +574,7 @@ push(valueType(a op b)); \
                     if(isLocal)
                     {
                         //son como cajitas
+                        //aqui estas en method!
                         closure->upvalues[i] = captureUpvalue(frame->slots + index);
                     }
                     else
@@ -675,7 +690,7 @@ void initVM()
 {
     resetStack();
     vm.objects = NULL;
-    
+    vm.initString = NULL;
     vm.grayCount = 0;
     vm.grayCapacity = 0;
     vm.grayStack = NULL;
@@ -687,6 +702,8 @@ void initVM()
     initTable(&vm.strings);
     initTable(&vm.globals);
     
+    vm.initString = copyString("init", 4);
+
     defineNative("clock", clockNative);
     
 }

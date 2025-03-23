@@ -43,6 +43,8 @@ typedef struct
 
 typedef enum
 {
+    TYPE_INITIALIZER,
+    TYPE_METHOD,
     TYPE_FUNCTION,
     TYPE_SCRIPT
 }FunctionType;
@@ -67,6 +69,12 @@ typedef struct Compiler
     
 }Compiler;
 
+typedef struct ClassCompiler
+{
+    ClassCompiler* enclosing;
+}ClassCompiler;
+
+
 typedef struct 
 {
     Token current;
@@ -76,6 +84,8 @@ typedef struct
 }Parser;
 
 void markCompilerRoots();
+
+void this_(bool canAssign);
 void dot(bool canAssign);
 void call(bool canAssign);
 void string(bool canAssign);

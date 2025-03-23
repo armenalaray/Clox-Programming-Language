@@ -47,6 +47,8 @@ typedef struct
     
     //todos
     Obj* objects;
+ 
+    ObjString* initString;
     
     //grabage collector
     size_t bytesAllocated;
