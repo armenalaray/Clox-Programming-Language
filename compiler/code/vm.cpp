@@ -543,6 +543,17 @@ static InterpretResult run()
             break;
         }
 
+        case OP_INHERIT:
+        {
+            ObjClass *superClass = AS_CLASS(peek(1));
+            ObjClass *subClass = AS_CLASS(peek(0));
+
+            tableAddAll(&superClass->methods, &subClass->methods);
+
+            pop();
+            break;
+        }
+
         case OP_METHOD:
         {
             defineMethod(READ_STRING());

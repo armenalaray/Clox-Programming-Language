@@ -18,6 +18,7 @@ typedef enum
     OP_SET_PROPERTY,
     OP_INVOKE,
     OP_METHOD,
+    OP_INHERIT,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,
