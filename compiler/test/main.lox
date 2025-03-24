@@ -1,11 +1,17 @@
-class Doughnut {
-  cook() {
-    print "Dunk in the fryer.";
+class Base {
+  foo() {
+    print "Alejandro";
   }
 }
 
-class Cruller < Doughnut {
-  finish() {
-    print "Glaze with icing.";
+class Derived < Base {
+  bar() {
+    super.foo();
   }
 }
+
+Derived().bar();
+// expect: Derived.bar()
+// expect: Base.foo()
+
+//OP_CALL y GET_LOCAL

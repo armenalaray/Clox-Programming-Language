@@ -23,7 +23,7 @@ typedef enum
     PREC_UNARY,
     PREC_CALL,
     PREC_PRIMARY
-}Precedence;
+} Precedence;
 
 typedef void (*ParseFn)(bool canAssign);
 
@@ -39,7 +39,7 @@ typedef struct
     Token name;
     int depth;
     bool isCaptured;
-}Local;
+} Local;
 
 typedef enum
 {
@@ -47,44 +47,45 @@ typedef enum
     TYPE_METHOD,
     TYPE_FUNCTION,
     TYPE_SCRIPT
-}FunctionType;
+} FunctionType;
 
 typedef struct
 {
     uint8_t index;
     bool isLocal;
-}Upvalue;
+} Upvalue;
 
 typedef struct Compiler
 {
-    struct Compiler* enclosing;
-    ObjFunction* function;
+    struct Compiler *enclosing;
+    ObjFunction *function;
     FunctionType type;
-    
+
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
-    
+
     Upvalue upvalues[UINT8_COUNT];
-    
-}Compiler;
+
+} Compiler;
 
 typedef struct ClassCompiler
 {
-    ClassCompiler* enclosing;
-}ClassCompiler;
+    bool hasSuperClass;
+    ClassCompiler *enclosing;
+} ClassCompiler;
 
-
-typedef struct 
+typedef struct
 {
     Token current;
     Token previous;
     bool hadError;
     bool panicMode;
-}Parser;
+} Parser;
 
 void markCompilerRoots();
 
+void super_(bool canAssign);
 void this_(bool canAssign);
 void dot(bool canAssign);
 void call(bool canAssign);
@@ -100,6 +101,6 @@ void variable(bool canAssign);
 void declaration();
 void statement();
 
-ObjFunction* compile(const char* source);
+ObjFunction *compile(const char *source);
 
-#endif //COMPILER_H
+#endif // COMPILER_H
