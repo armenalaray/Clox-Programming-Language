@@ -1,4 +1,4 @@
-# Clox Programming Language
+# Lox Programming Language
  
 This is a programming language I made from scratch. It is a managed language like C#, it has a Garbage Collector GC, It is Object Oriented and it has inheritance.
 
