@@ -1,6 +1,6 @@
 # Clox Programming Language
  
-This is a programming language I made from scratch. It is a compiled and interpreted language. It has runtime systems like closures that run in the virtual machine and static systems like functions that are compiled by the parser.
+This is a programming language I made from scratch. It is a managed language like C#, it has a Garbage Collector GC, It is Object Oriented and it has inheritance.
 
 ![final](https://github.com/user-attachments/assets/ef7315d9-cccb-440f-81e1-72c22294a089)
 
